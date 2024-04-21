@@ -10,6 +10,10 @@ from datasets import Dataset, DatasetDict, Features, Image, Value
 from diffusers.pipelines.audio_diffusion import Mel
 from tqdm.auto import tqdm
 
+# must deprecate diffusers library to allow for audio-diffusion huggingface library!
+# https://github.com/huggingface/diffusers/issues/6463
+
+
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger("audio_to_images")
 
@@ -29,6 +33,7 @@ def main(args):
         for file in files
         if re.search("\.(mp3|wav|m4a)$", file, re.IGNORECASE)
     ]
+    print(audio_files)
     examples = []
     try:
         for audio_file in tqdm(audio_files):

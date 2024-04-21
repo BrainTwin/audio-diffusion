@@ -47,7 +47,7 @@ def main(args):
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
         log_with="tensorboard",
-        logging_dir=logging_dir,
+        project_dir=logging_dir,
     )
 
     if args.dataset_name is not None:
@@ -169,12 +169,22 @@ def main(args):
                 cross_attention_dim=list(encodings.values())[0].shape[-1],
             )
 
-    if args.scheduler == "ddpm":
-        noise_scheduler = DDPMScheduler(
+    # Initialize schedulers
+    # TODO
+    # add cosine schedule and experiment with scheduling
+    if args.train_scheduler == "ddpm":
+        train_noise_scheduler = DDPMScheduler(
             num_train_timesteps=args.num_train_steps)
     else:
-        noise_scheduler = DDIMScheduler(
+        train_noise_scheduler = DDIMScheduler(
             num_train_timesteps=args.num_train_steps)
+        
+    if args.test_scheduler == "ddpm":
+        test_noise_scheduler = DDPMScheduler(
+            num_train_timesteps=args.num_inference_steps)
+    else:
+        test_noise_scheduler = DDIMScheduler(
+            num_train_timesteps=args.num_inference_steps)
 
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -256,14 +266,14 @@ def main(args):
             # Sample a random timestep for each image
             timesteps = torch.randint(
                 0,
-                noise_scheduler.config.num_train_timesteps,
+                train_noise_scheduler.config.num_train_timesteps,
                 (bsz, ),
                 device=clean_images.device,
             ).long()
 
             # Add noise to the clean images according to the noise magnitude at each timestep
             # (this is the forward diffusion process)
-            noisy_images = noise_scheduler.add_noise(clean_images, noise,
+            noisy_images = train_noise_scheduler.add_noise(clean_images, noise,
                                                      timesteps)
 
             with accelerator.accumulate(model):
@@ -312,7 +322,7 @@ def main(args):
                     vqvae=vqvae,
                     unet=unet,
                     mel=mel,
-                    scheduler=noise_scheduler,
+                    scheduler=train_noise_scheduler,
                 )
 
             if (
@@ -347,6 +357,7 @@ def main(args):
                     batch_size=args.eval_batch_size,
                     return_dict=False,
                     encoding=encoding,
+                    steps=args.num_inference_steps
                 )
 
                 # denormalize the images and save to tensorboard
@@ -423,10 +434,9 @@ if __name__ == "__main__":
     parser.add_argument("--from_pretrained", type=str, default=None)
     parser.add_argument("--start_epoch", type=int, default=0)
     parser.add_argument("--num_train_steps", type=int, default=1000)
-    parser.add_argument("--scheduler",
-                        type=str,
-                        default="ddpm",
-                        help="ddpm or ddim")
+    parser.add_argument("--num_inference_steps", type=int, default=5, help="Number of timesteps for inference noise scheduling.")
+    parser.add_argument("--train_scheduler", type=str, default="ddpm", help="ddpm or ddim")
+    parser.add_argument("--test_scheduler", type=str, default="ddpm", help="ddpm or ddim")
     parser.add_argument(
         "--vae",
         type=str,
