@@ -5,6 +5,7 @@ import os
 import pickle
 import random
 from pathlib import Path
+import time
 from typing import Optional
 
 import numpy as np
@@ -16,6 +17,8 @@ from datasets import load_dataset, load_from_disk
 from diffusers import (AutoencoderKL, DDIMScheduler, DDPMScheduler,
                        UNet2DConditionModel, UNet2DModel)
 from diffusers.optimization import get_scheduler
+# you might need to deprecate diffusers library!
+# https://github.com/huggingface/diffusers/issues/6463
 from diffusers.pipelines.audio_diffusion import Mel
 from diffusers.training_utils import EMAModel
 from huggingface_hub import HfFolder, Repository, whoami
@@ -233,7 +236,10 @@ def main(args):
     )
 
     global_step = 0
+    total_start_time = time.time()
+    
     for epoch in range(args.num_epochs):
+        epoch_start_time = time.time()
         progress_bar = tqdm(total=len(train_dataloader),
                             disable=not accelerator.is_local_main_process)
         progress_bar.set_description(f"Epoch {epoch}")
@@ -297,6 +303,7 @@ def main(args):
             progress_bar.update(1)
             global_step += 1
 
+            # Log training metrics
             logs = {
                 "loss": loss.detach().item(),
                 "lr": lr_scheduler.get_last_lr()[0],
@@ -306,6 +313,18 @@ def main(args):
                 logs["ema_decay"] = ema_model.decay
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
+            
+        # Log time metrics
+        epoch_end_time = time.time()  # End time for each epoch
+        epoch_duration = epoch_end_time - epoch_start_time
+        total_training_time = epoch_end_time - total_start_time
+        training_time_per_step = epoch_duration / len(train_dataloader) if train_dataloader else 0
+        logs.update({
+            "total_training_time": total_training_time,
+            "training_time_per_step": training_time_per_step,
+        })
+        accelerator.log(logs, step=global_step)    
+            
         progress_bar.close()
 
         accelerator.wait_for_everyone()
@@ -328,6 +347,8 @@ def main(args):
             if (
                     epoch + 1
             ) % args.save_model_epochs == 0 or epoch == args.num_epochs - 1:
+                model_filename = f"model_step_{global_step}.pt"  # Change the filename to include the step count
+                model_save_path = os.path.join(output_dir)
                 pipeline.save_pretrained(output_dir)
 
                 # save the model
@@ -366,9 +387,12 @@ def main(args):
                         (len(image.getbands()), image.height, image.width))
                     for image in images
                 ])
+                # for logging, please view docs here:
+                # https://pytorch.org/docs/stable/tensorboard.html
                 accelerator.trackers[0].writer.add_images(
                     "test_samples", images, epoch)
                 for _, audio in enumerate(audios):
+                    snd_tensor = audio.reshape(1, -1)
                     accelerator.trackers[0].writer.add_audio(
                         f"test_audio_{_}",
                         normalize(audio),
@@ -451,6 +475,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    
+    print(args)
+    
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != args.local_rank:
         args.local_rank = env_local_rank
