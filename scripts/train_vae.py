@@ -5,6 +5,8 @@ import os
 
 import numpy as np
 import pytorch_lightning as pl
+# if getting the error: cannot import name '_compare_version' from 'torchmetrics.utilities.imports' 
+# use this fix: https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/11648
 import torch
 import torchvision
 from datasets import load_dataset, load_from_disk
@@ -134,9 +136,9 @@ if __name__ == "__main__":
     parser.add_argument("--hf_checkpoint_dir", type=str, default="models/autoencoder-kl")
     parser.add_argument("-r", "--resume_from_checkpoint", type=str, default=None)
     parser.add_argument("-g", "--gradient_accumulation_steps", type=int, default=1)
-    parser.add_argument("--hop_length", type=int, default=512)
+    parser.add_argument("--hop_length", type=int, default=256)
     parser.add_argument("--sample_rate", type=int, default=22050)
-    parser.add_argument("--n_fft", type=int, default=2048)
+    parser.add_argument("--n_fft", type=int, default=1024)
     parser.add_argument("--save_images_batches", type=int, default=1000)
     parser.add_argument("--max_epochs", type=int, default=100)
     args = parser.parse_args()
