@@ -23,14 +23,17 @@ from torch.utils.data import DataLoader, Dataset
 from audiodiffusion.utils import convert_ldm_to_hf_vae
 
 
+
 class AudioDiffusion(Dataset):
-    def __init__(self, model_id, channels=3):
+    def __init__(self, model_id, channels=3, max_samples=None):
         super().__init__()
         self.channels = channels
         if os.path.exists(model_id):
             self.hf_dataset = load_from_disk(model_id)["train"]
         else:
             self.hf_dataset = load_dataset(model_id)["train"]
+        if max_samples is not None:
+            self.hf_dataset = self.hf_dataset.select(range(min(max_samples, len(self.hf_dataset))))
 
     def __len__(self):
         return len(self.hf_dataset)
@@ -44,15 +47,17 @@ class AudioDiffusion(Dataset):
         return {"image": image}
 
 
+
 class AudioDiffusionDataModule(pl.LightningDataModule):
-    def __init__(self, model_id, batch_size, channels):
+    def __init__(self, model_id, batch_size, channels, max_samples=None):
         super().__init__()
         self.batch_size = batch_size
-        self.dataset = AudioDiffusion(model_id=model_id, channels=channels)
+        self.dataset = AudioDiffusion(model_id=model_id, channels=channels, max_samples=max_samples)
         self.num_workers = 1
 
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, num_workers=self.num_workers)
+
 
 
 class ImageLogger(Callback):
@@ -141,6 +146,7 @@ if __name__ == "__main__":
     parser.add_argument("--n_fft", type=int, default=1024)
     parser.add_argument("--save_images_batches", type=int, default=1000)
     parser.add_argument("--max_epochs", type=int, default=100)
+    parser.add_argument("--max_samples", type=int, default = 50, help="Maximum number of samples to load from the dataset")
     args = parser.parse_args()
 
     config = OmegaConf.load(args.ldm_config_file)
@@ -150,6 +156,7 @@ if __name__ == "__main__":
         model_id=args.dataset_name,
         batch_size=args.batch_size,
         channels=config.model.params.ddconfig.in_channels,
+        max_samples=args.max_samples
     )
     lightning_config = config.pop("lightning", OmegaConf.create())
     trainer_config = lightning_config.get("trainer", OmegaConf.create())
