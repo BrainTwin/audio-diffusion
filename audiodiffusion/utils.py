@@ -30,7 +30,7 @@ def renew_vae_resnet_paths(old_list, n_shave_prefix_segments=0):
     return mapping
 
 
-def renew_vae_attention_paths(old_list, n_shave_prefix_segments=0):
+def renew_vae_attention_paths_old(old_list, n_shave_prefix_segments=0):
     """
     Updates paths inside attentions to the new naming scheme (local renaming)
     """
@@ -58,6 +58,32 @@ def renew_vae_attention_paths(old_list, n_shave_prefix_segments=0):
         mapping.append({"old": old_item, "new": new_item})
 
     return mapping
+
+
+def renew_vae_attention_paths(old_list, n_shave_prefix_segments=0):
+    mapping = []
+    for old_item in old_list:
+        new_item = old_item
+
+        # Update normalization and attention names
+        new_item = new_item.replace("norm.weight", "group_norm.weight")
+        new_item = new_item.replace("norm.bias", "group_norm.bias")
+        new_item = new_item.replace("q.weight", "to_q.weight")
+        new_item = new_item.replace("q.bias", "to_q.bias")
+        new_item = new_item.replace("k.weight", "to_k.weight")
+        new_item = new_item.replace("k.bias", "to_k.bias")
+        new_item = new_item.replace("v.weight", "to_v.weight")
+        new_item = new_item.replace("v.bias", "to_v.bias")
+        new_item = new_item.replace("proj_out.weight", "to_out.0.weight")
+        new_item = new_item.replace("proj_out.bias", "to_out.0.bias")
+
+        new_item = shave_segments(new_item, n_shave_prefix_segments=n_shave_prefix_segments)
+
+        mapping.append({"old": old_item, "new": new_item})
+
+    return mapping
+
+
 
 
 def assign_to_checkpoint(
@@ -117,7 +143,7 @@ def assign_to_checkpoint(
             checkpoint[new_path] = old_checkpoint[path["old"]]
 
 
-def conv_attn_to_linear(checkpoint):
+def conv_attn_to_linear_old(checkpoint):
     keys = list(checkpoint.keys())
     attn_keys = ["query.weight", "key.weight", "value.weight"]
     for key in keys:
@@ -127,6 +153,30 @@ def conv_attn_to_linear(checkpoint):
         elif "proj_attn.weight" in key:
             if checkpoint[key].ndim > 2:
                 checkpoint[key] = checkpoint[key][:, :, 0]
+                
+                
+def conv_attn_to_linear(checkpoint):
+    keys_to_convert = [
+        "encoder.mid_block.attentions.0.to_q.weight",
+        "encoder.mid_block.attentions.0.to_k.weight",
+        "encoder.mid_block.attentions.0.to_v.weight",
+        "encoder.mid_block.attentions.0.to_out.0.weight",
+        "decoder.mid_block.attentions.0.to_q.weight",
+        "decoder.mid_block.attentions.0.to_k.weight",
+        "decoder.mid_block.attentions.0.to_v.weight",
+        "decoder.mid_block.attentions.0.to_out.0.weight",
+    ]
+
+    for key in keys_to_convert:
+        if key in checkpoint:
+            # Convert the 4D convolutional weight to a 2D linear weight
+            original_weight = checkpoint[key]
+            if original_weight.ndim == 4 and original_weight.shape[2] == 1 and original_weight.shape[3] == 1:
+                # Remove the last two dimensions
+                checkpoint[key] = original_weight.squeeze(-1).squeeze(-1)
+
+    return checkpoint
+
 
 
 def create_vae_diffusers_config(original_config):
@@ -297,6 +347,9 @@ def convert_ldm_to_hf_vae(ldm_checkpoint, ldm_config, hf_checkpoint, sample_size
     # Convert the VAE model.
     vae_config = create_vae_diffusers_config(ldm_config)
     converted_vae_checkpoint = convert_ldm_vae_checkpoint(checkpoint, vae_config)
+
+    # Adjust convolutional weights to linear format
+    converted_vae_checkpoint = conv_attn_to_linear(converted_vae_checkpoint)
 
     vae = AutoencoderKL(**vae_config)
     vae.load_state_dict(converted_vae_checkpoint)
