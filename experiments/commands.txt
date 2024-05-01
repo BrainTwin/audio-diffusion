@@ -1,0 +1,71 @@
+=========================================
+TESTING SMALL DATASET WITH NOHUP
+
+nohup accelerate launch --config_file config/accelerate_local.yaml \
+scripts/train_unet.py \
+--dataset_name cache/spotify_sleep_dataset/waveform_small/mel_spectrogram \
+--hop_length 256 \
+--n_fft 1024 \
+--output_dir models/ssd_light_training_waveform_small_64_64 \
+--train_batch_size 4 \
+--eval_batch_size 8 \
+--num_epochs 8 \
+--gradient_accumulation_steps 4 \
+--learning_rate 1e-4 \
+--lr_warmup_steps 500 \
+--mixed_precision no \
+--save_model_epochs 2 \
+--save_images_epochs 2 \
+--num_train_steps 1000 \
+--num_inference_steps 1000 \
+--train_scheduler ddpm \
+--test_scheduler ddpm \
+> logs/ssd_light_training_waveform_small_64_64 2>&1 &
+
+=========================================
+GENERATE MEL SPECTROGRAMS FROM AUDIO AND SAVE TO File
+
+python scripts/audio_to_images.py \
+--resolution 64 \
+--hop_length 256 \
+--n_fft 1024 \
+--input_dir cache/spotify_sleep_dataset/waveform_small \
+--output_dir cache/spotify_sleep_dataset/waveform_small/mel_spec_64_64
+
+
+=========================================
+GENERATE SAMPLE IMAGES FROM TRAINED MODEL
+
+python scripts/inference_unet.py \
+--model_path path/to/model \
+--num_images 512 \
+--num_inference_steps 50 \
+--eval_batch_size 64 \
+--scheduler ddim
+
+=========================================
+COMPUTE FAD SCORE BETWEEN REFERENCE AND GENERATED SET
+
+fadtk clap-laion-audio /path/to/baseline/audio /path/to/evaluation/audio
+
+=========================================
+TRAIN VAE
+
+nohup python scripts/train_vae.py \
+    --dataset_name cache/spotify_sleep_dataset/waveform_small/mel_spec_64_64 \
+    --batch_size 8 \
+    --gradient_accumulation_steps 2 \
+    --save_images_batches 4 \
+    --max_epochs 200 > logs/train_vae_ssd_64 2>&1 &
+
+
+=========================================
+
+
+=========================================
+
+
+=========================================
+
+
+=========================================
