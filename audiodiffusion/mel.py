@@ -17,6 +17,7 @@
 
 
 import warnings
+import torch
 from typing import Callable, Union
 
 from diffusers.configuration_utils import ConfigMixin, register_to_config
@@ -62,10 +63,10 @@ class Mel(ConfigMixin, SchedulerMixin):
         x_res: int = 256,
         y_res: int = 256,
         sample_rate: int = 22050,
-        n_fft: int = 2048,
-        hop_length: int = 512,
+        n_fft: int = 1024,
+        hop_length: int = 256,
         top_db: int = 80,
-        n_iter: int = 32,
+        n_iter: int = 256,
     ):
         self.hop_length = hop_length
         self.sr = sample_rate
@@ -162,8 +163,22 @@ class Mel(ConfigMixin, SchedulerMixin):
         """
         bytedata = np.frombuffer(image.tobytes(), dtype="uint8").reshape((image.height, image.width))
         log_S = bytedata.astype("float") * self.top_db / 255 - self.top_db
+        print(log_S)
         S = librosa.db_to_power(log_S)
         audio = librosa.feature.inverse.mel_to_audio(
             S, sr=self.sr, n_fft=self.n_fft, hop_length=self.hop_length, n_iter=self.n_iter
         )
         return audio
+    
+
+    def tensor_to_audio(self, tensor: torch.Tensor) -> np.ndarray:
+        if tensor.shape[0] > 1:
+            raise ValueError("Tensor should have only one channel for a grayscale image.")
+        grayscale_data = tensor[0].numpy()
+        log_S = grayscale_data.astype("float") * self.top_db / 255 - self.top_db
+        S = librosa.db_to_power(log_S)
+        audio = librosa.feature.inverse.mel_to_audio(
+            S, sr=self.sr, n_fft=self.n_fft, hop_length=self.hop_length, n_iter=self.n_iter
+        )
+        return audio
+

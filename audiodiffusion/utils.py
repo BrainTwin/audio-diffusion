@@ -351,6 +351,13 @@ def convert_ldm_to_hf_vae(ldm_checkpoint, ldm_config, hf_checkpoint, sample_size
     # Adjust convolutional weights to linear format
     converted_vae_checkpoint = conv_attn_to_linear(converted_vae_checkpoint)
 
+    # DEBUGGING:
+    # model_keys = set(vae.state_dict().keys())
+    # checkpoint_keys = set(converted_vae_checkpoint.keys())
+    # print("Missing keys:", model_keys - checkpoint_keys)
+    # print("Unexpected keys:", checkpoint_keys - model_keys)
+
+
     vae = AutoencoderKL(**vae_config)
     vae.load_state_dict(converted_vae_checkpoint)
     vae.save_pretrained(hf_checkpoint)
