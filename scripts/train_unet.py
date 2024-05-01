@@ -452,9 +452,9 @@ if __name__ == "__main__":
             "between fp16 and bf16 (bfloat16). Bf16 requires PyTorch >= 1.10."
             "and an Nvidia Ampere GPU."),
     )
-    parser.add_argument("--hop_length", type=int, default=512)
+    parser.add_argument("--hop_length", type=int, default=256)
     parser.add_argument("--sample_rate", type=int, default=22050)
-    parser.add_argument("--n_fft", type=int, default=2048)
+    parser.add_argument("--n_fft", type=int, default=1024)
     parser.add_argument("--from_pretrained", type=str, default=None)
     parser.add_argument("--start_epoch", type=int, default=0)
     parser.add_argument("--num_train_steps", type=int, default=1000)

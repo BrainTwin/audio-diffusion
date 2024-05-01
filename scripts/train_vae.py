@@ -20,6 +20,10 @@ from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.utilities.distributed import rank_zero_only
 from torch.utils.data import DataLoader, Dataset
 
+import sys
+# we want this script to first look into the local directory, rather than the installed audiodiffusion library
+sys.path.insert(0, '/home/th716/audio-diffusion/')
+print(sys.path)
 from audiodiffusion.utils import convert_ldm_to_hf_vae
 
 
@@ -115,11 +119,13 @@ class ImageLogger(Callback):
 
 
 class HFModelCheckpoint(ModelCheckpoint):
-    def __init__(self, ldm_config, hf_checkpoint, *args, **kwargs):
+    def __init__(self, exp_name, ldm_config, hf_checkpoint, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ldm_config = ldm_config
         self.hf_checkpoint = hf_checkpoint
         self.sample_size = None
+        # Customize the directory path using the experiment name
+        self.dirpath = os.path.join(self.dirpath, exp_name)  # Append the experiment name to the directory path
 
     def on_train_batch_start(self, trainer, pl_module, batch, batch_idx):
         if self.sample_size is None:
@@ -146,8 +152,10 @@ if __name__ == "__main__":
     parser.add_argument("--n_fft", type=int, default=1024)
     parser.add_argument("--save_images_batches", type=int, default=1000)
     parser.add_argument("--max_epochs", type=int, default=100)
-    parser.add_argument("--max_samples", type=int, default = 50, help="Maximum number of samples to load from the dataset")
+    parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to load from the dataset")
     args = parser.parse_args()
+    
+    exp_name = f'd_{args.dataset_name}_'
 
     config = OmegaConf.load(args.ldm_config_file)
     model = instantiate_from_config(config.model)
