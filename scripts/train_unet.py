@@ -314,6 +314,88 @@ def main(args):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
             
+            if accelerator.is_main_process:
+                if ((global_step + 1) % args.save_model_steps == 0
+                        or (global_step + 1) % args.save_images_steps == 0
+                        or epoch == args.num_epochs - 1
+                        or global_step >= args.max_training_num_steps):
+                    unet = accelerator.unwrap_model(model)
+                    if args.use_ema:
+                        ema_model.copy_to(unet.parameters())
+                    pipeline = AudioDiffusionPipeline(
+                        vqvae=vqvae,
+                        unet=unet,
+                        mel=mel,
+                        scheduler=train_noise_scheduler,
+                    )
+
+                # Save model checkpoint
+                if (global_step + 1) % args.save_model_steps == 0 \
+                    or epoch == args.num_epochs - 1 \
+                    or global_step >= args.max_training_num_steps:
+                    model_filename = f"model_step_{global_step}.pt"  # Change the filename to include the step count
+                    model_save_path = os.path.join(model_filename)
+                    pipeline.save_pretrained(model_save_path)
+
+                    # save the model
+                    if args.push_to_hub:
+                        repo.push_to_hub(
+                            commit_message=f"global_step {global_step}",
+                            blocking=False,
+                            auto_lfs_prune=True,
+                        )
+
+                # Generate sample images for visual inspection
+                if (global_step + 1) % args.save_images_steps == 0 \
+                    or global_step >= args.max_training_num_steps:
+                    generator = torch.Generator(
+                        device=clean_images.device).manual_seed(42)
+
+                    if args.encodings is not None:
+                        random.seed(42)
+                        encoding = torch.stack(
+                            random.sample(list(encodings.values()),
+                                        args.eval_batch_size)).to(
+                                            clean_images.device)
+                    else:
+                        encoding = None
+
+                    # run pipeline in inference (sample random noise and denoise)
+                    images, (sample_rate, audios) = pipeline(
+                        generator=generator,
+                        batch_size=args.eval_batch_size,
+                        return_dict=False,
+                        encoding=encoding,
+                        steps=args.num_inference_steps
+                    )
+
+                    # denormalize the images and save to tensorboard
+                    images = np.array([
+                        np.frombuffer(image.tobytes(), dtype="uint8").reshape(
+                            (len(image.getbands()), image.height, image.width))
+                        for image in images
+                    ])
+                    # for logging, please view docs here:
+                    # https://pytorch.org/docs/stable/tensorboard.html
+                    accelerator.trackers[0].writer.add_images(
+                        "test_samples", images, global_step)
+                    for _, audio in enumerate(audios):
+                        snd_tensor = audio.reshape(1, -1)
+                        accelerator.trackers[0].writer.add_audio(
+                            f"test_audio_{_}",
+                            normalize(audio),
+                            global_step,
+                            sample_rate=sample_rate,
+                        )
+                accelerator.wait_for_everyone()
+                
+                # ==============================================
+                # Exit training if max num steps is breached
+                # ==============================================
+                if global_step >= args.max_training_num_steps:
+                    accelerator.end_training() 
+                    return
+            
         # Log time metrics
         epoch_end_time = time.time()  # End time for each epoch
         epoch_duration = epoch_end_time - epoch_start_time
@@ -329,77 +411,7 @@ def main(args):
 
         accelerator.wait_for_everyone()
 
-        # Generate sample images for visual inspection
-        if accelerator.is_main_process:
-            if ((epoch + 1) % args.save_model_epochs == 0
-                    or (epoch + 1) % args.save_images_epochs == 0
-                    or epoch == args.num_epochs - 1):
-                unet = accelerator.unwrap_model(model)
-                if args.use_ema:
-                    ema_model.copy_to(unet.parameters())
-                pipeline = AudioDiffusionPipeline(
-                    vqvae=vqvae,
-                    unet=unet,
-                    mel=mel,
-                    scheduler=train_noise_scheduler,
-                )
-
-            if (
-                    epoch + 1
-            ) % args.save_model_epochs == 0 or epoch == args.num_epochs - 1:
-                model_filename = f"model_step_{global_step}.pt"  # Change the filename to include the step count
-                model_save_path = os.path.join(output_dir)
-                pipeline.save_pretrained(output_dir)
-
-                # save the model
-                if args.push_to_hub:
-                    repo.push_to_hub(
-                        commit_message=f"Epoch {epoch}",
-                        blocking=False,
-                        auto_lfs_prune=True,
-                    )
-
-            if (epoch + 1) % args.save_images_epochs == 0:
-                generator = torch.Generator(
-                    device=clean_images.device).manual_seed(42)
-
-                if args.encodings is not None:
-                    random.seed(42)
-                    encoding = torch.stack(
-                        random.sample(list(encodings.values()),
-                                      args.eval_batch_size)).to(
-                                          clean_images.device)
-                else:
-                    encoding = None
-
-                # run pipeline in inference (sample random noise and denoise)
-                images, (sample_rate, audios) = pipeline(
-                    generator=generator,
-                    batch_size=args.eval_batch_size,
-                    return_dict=False,
-                    encoding=encoding,
-                    steps=args.num_inference_steps
-                )
-
-                # denormalize the images and save to tensorboard
-                images = np.array([
-                    np.frombuffer(image.tobytes(), dtype="uint8").reshape(
-                        (len(image.getbands()), image.height, image.width))
-                    for image in images
-                ])
-                # for logging, please view docs here:
-                # https://pytorch.org/docs/stable/tensorboard.html
-                accelerator.trackers[0].writer.add_images(
-                    "test_samples", images, epoch)
-                for _, audio in enumerate(audios):
-                    snd_tensor = audio.reshape(1, -1)
-                    accelerator.trackers[0].writer.add_audio(
-                        f"test_audio_{_}",
-                        normalize(audio),
-                        epoch,
-                        sample_rate=sample_rate,
-                    )
-        accelerator.wait_for_everyone()
+        
 
     accelerator.end_training()
 
@@ -422,8 +434,9 @@ if __name__ == "__main__":
     parser.add_argument("--train_batch_size", type=int, default=16)
     parser.add_argument("--eval_batch_size", type=int, default=16)
     parser.add_argument("--num_epochs", type=int, default=100)
-    parser.add_argument("--save_images_epochs", type=int, default=10)
-    parser.add_argument("--save_model_epochs", type=int, default=10)
+    parser.add_argument("--max_training_num_steps", type=int, default=10000)
+    parser.add_argument("--save_images_steps", type=int, default=10)
+    parser.add_argument("--save_model_steps", type=int, default=10)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
     parser.add_argument("--lr_scheduler", type=str, default="cosine")
