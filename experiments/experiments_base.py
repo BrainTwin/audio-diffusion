@@ -1,6 +1,5 @@
 import os
 
-# List of variable combinations
 variable_combinations = [
     {
         "dataset_name": "/home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_64_64",
@@ -28,7 +27,6 @@ variable_combinations = [
     }
 ]
 
-# Loop over the variable combinations
 for vars in variable_combinations:
     command = f"""
     accelerate launch --config_file config/accelerate_local.yaml \\
@@ -41,7 +39,7 @@ for vars in variable_combinations:
     --eval_batch_size 16 \\
     --num_epochs 1000 \\
     --max_training_num_steps 300000 \\
-    --gradient_accumulation_steps 4 \\
+    --gradient_accumulation_steps 1 \\
     --learning_rate 1e-4 \\
     --lr_warmup_steps 500 \\
     --mixed_precision no \\
@@ -52,8 +50,6 @@ for vars in variable_combinations:
     --train_scheduler ddpm \\
     --test_scheduler ddpm \\
     """
-    # Execute the command
     os.system(command)
 
-# Notify the user about the process
 print("Commands executed for all variable combinations.")
