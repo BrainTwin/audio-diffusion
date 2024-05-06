@@ -48,7 +48,10 @@ mpi_tasks_per_node=$(echo "$SLURM_TASKS_PER_NODE" | sed -e  's/^\([0-9][0-9]*\).
 #! (note that SLURM reproduces the environment at submission irrespective of ~/.bashrc):
 . /etc/profile.d/modules.sh                # Leave this line (enables the module command)
 module purge                               # Removes all modules still loaded
-module load anaconda3                      # Load Anaconda for Conda support, adjust as necessary
+module load rhel8/default-amp               # REQUIRED - loads the basic environment
+module load miniconda/3                      # Load Anaconda for Conda support, adjust as necessary
+
+source ~/.bashrc  
 
 conda init bash
 conda activate audiodiff_env              # Activate your Conda environment
