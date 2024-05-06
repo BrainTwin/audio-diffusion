@@ -1,4 +1,16 @@
-BATCH -J test_base_experiment_ssd_64
+#!/bin/bash
+#!
+#! Example SLURM job script for Wilkes3 (AMD EPYC 7763, ConnectX-6, A100)
+#! Last updated: Fri 30 Jul 11:07:58 BST 2021
+#!
+
+#!#############################################################
+#!#### Modify the options in this section as appropriate ######
+#!#############################################################
+
+#! sbatch directives begin here ###############################
+
+#! BATCH -J test_base_experiment_ssd_64
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #! How many whole nodes should be allocated?
@@ -43,25 +55,25 @@ conda activate audiodiff_env              # Activate your Conda environment
 application="accelerate"
 
 #! Run options for the application:
-options="launch --config_file config/accelerate_local.yaml \\
-scripts/train_unet.py \\
---dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_64_64 \\
---output_dir /home/th716/rds/hpc-work/audio-diffusion/models/musiccaps_64_64_testing_hpc"
---hop_length 256 \\
---n_fft 1024 \\
---train_batch_size 32 \\
---eval_batch_size 16 \\
---num_epochs 1000 \\
---max_training_num_steps 20 \\
---gradient_accumulation_steps 1 \\
---learning_rate 1e-4 \\
---lr_warmup_steps 500 \\
---mixed_precision no \\
---save_model_steps 50000 \\
---save_images_steps 25000 \\
---num_train_steps 1000 \\
---num_inference_steps 1000 \\
---train_scheduler ddpm \\
+options="launch --config_file config/accelerate_local.yaml \
+scripts/train_unet.py \
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_64_64 \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/musiccaps_64_64_testing_hpc" \
+--hop_length 256 \
+--n_fft 1024 \
+--train_batch_size 32 \
+--eval_batch_size 16 \
+--num_epochs 1000 \
+--max_training_num_steps 20 \
+--gradient_accumulation_steps 1 \
+--learning_rate 1e-4 \
+--lr_warmup_steps 500 \
+--mixed_precision no \
+--save_model_steps 50000 \
+--save_images_steps 25000 \
+--num_train_steps 1000 \
+--num_inference_steps 1000 \
+--train_scheduler ddpm \
 --test_scheduler ddpm"
 
 CMD="$application $options"
