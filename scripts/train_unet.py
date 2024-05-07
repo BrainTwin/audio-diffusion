@@ -20,13 +20,18 @@ from diffusers.optimization import get_scheduler
 # you might need to deprecate diffusers library!
 # https://github.com/huggingface/diffusers/issues/6463
 from diffusers.pipelines.audio_diffusion import Mel
-from diffusers.training_utils import EMAModel
+from diffusers.training_utils import EMAModel # currently using 0.24.0 diffusers library
 from huggingface_hub import HfFolder, Repository, whoami
 from librosa.util import normalize
 from torchvision.transforms import Compose, Normalize, ToTensor
 from tqdm.auto import tqdm
 
+import sys
+sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/audiodiffusion')
+print(sys.path)
 from audiodiffusion.pipeline_audio_diffusion import AudioDiffusionPipeline
+
+
 
 logger = get_logger(__name__)
 
@@ -315,10 +320,10 @@ def main(args):
             accelerator.log(logs, step=global_step)
             
             if accelerator.is_main_process:
-                if ((global_step + 1) % args.save_model_steps == 0
-                        or (global_step + 1) % args.save_images_steps == 0
-                        or epoch == args.num_epochs - 1
-                        or global_step >= args.max_training_num_steps):
+                if ((global_step + 1) % args.save_model_steps == 0 # whether to save our model
+                        or (global_step + 1) % args.save_images_steps == 0 # whether to save sample images
+                        or epoch == args.num_epochs - 1 # whether we've reached max epochs
+                        or global_step >= args.max_training_num_steps): # whether we've reached max steps
                     unet = accelerator.unwrap_model(model)
                     if args.use_ema:
                         ema_model.copy_to(unet.parameters())
