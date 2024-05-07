@@ -60,7 +60,7 @@ application="accelerate"
 
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
-scripts/train_unet.py \
+/home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_64_64 \
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/musiccaps_64_64_testing_hpc \
 --hop_length 256 \
