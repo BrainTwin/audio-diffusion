@@ -84,6 +84,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 
 CMD="$application $options"
 
+workdir="/home/th716/rds/hpc-work/audio-diffusion"
+
 ###############################################################
 ### You should not have to change anything below this line ####
 ###############################################################
