@@ -62,7 +62,7 @@ application="accelerate"
 options="launch --config_file config/accelerate_local.yaml \
 scripts/train_unet.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_64_64 \
---output_dir /home/th716/rds/hpc-work/audio-diffusion/models/musiccaps_64_64_testing_hpc" \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/musiccaps_64_64_testing_hpc \
 --hop_length 256 \
 --n_fft 1024 \
 --train_batch_size 32 \
