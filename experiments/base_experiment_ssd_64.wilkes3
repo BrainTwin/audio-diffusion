@@ -28,6 +28,8 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
+#SBATCH --output=base_experiment_testing_hpc.out  # name of output filename
+
 #! Do not change:
 #SBATCH -p ampere
 
