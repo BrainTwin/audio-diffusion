@@ -320,8 +320,8 @@ def main(args):
             accelerator.log(logs, step=global_step)
             
             if accelerator.is_main_process:
-                if ((global_step + 1) % args.save_model_steps == 0 # whether to save our model
-                        or (global_step + 1) % args.save_images_steps == 0 # whether to save sample images
+                if ((global_step) % args.save_model_steps == 0 # whether to save our model
+                        or (global_step) % args.save_images_steps == 0 # whether to save sample images
                         or epoch == args.num_epochs - 1 # whether we've reached max epochs
                         or global_step >= args.max_training_num_steps): # whether we've reached max steps
                     unet = accelerator.unwrap_model(model)
@@ -339,7 +339,7 @@ def main(args):
                     or epoch == args.num_epochs - 1 \
                     or global_step >= args.max_training_num_steps:
                     model_filename = f"model_step_{global_step}.pt"  # Change the filename to include the step count
-                    model_save_path = os.path.join(model_filename)
+                    model_save_path = os.path.join(output_dir, model_filename)
                     pipeline.save_pretrained(model_save_path)
 
                     # save the model
