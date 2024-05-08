@@ -27,7 +27,7 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 from tqdm.auto import tqdm
 
 import sys
-sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/audiodiffusion')
+sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/')
 print(sys.path)
 from audiodiffusion.pipeline_audio_diffusion import AudioDiffusionPipeline
 
