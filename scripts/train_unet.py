@@ -338,7 +338,7 @@ def main(args):
                 if (global_step + 1) % args.save_model_steps == 0 \
                     or epoch == args.num_epochs - 1 \
                     or global_step >= args.max_training_num_steps:
-                    model_filename = f"model_step_{global_step}.pt"  # Change the filename to include the step count
+                    model_filename = f"model_step_{global_step}"  # Change the filename to include the step count
                     model_save_path = os.path.join(output_dir, model_filename)
                     pipeline.save_pretrained(model_save_path)
 
