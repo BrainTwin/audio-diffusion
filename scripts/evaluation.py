@@ -36,11 +36,12 @@ def main(args):
     # Check if the metric to calculate is Frechet Audio Distance
     if args.metric == "frechet_audio_distance":
         print("Calculating Frechet Audio Distance...")
-        fad_score = run_fad_calculation(args.model_name, args.reference_path, args.generated_path)
-        print(f"Frechet Audio Distance Score: {fad_score}")
-        tensorboard_log_dir = os.path.join(args.log_dir, args.generated_path)
-        metric_log_name = f'{args.metric}_{args.model_name}'
-        log_to_tensorboard(tensorboard_log_dir, args.log_step, fad_score, metric_log_name)
+        for model_name in args.model_names:
+            fad_score = run_fad_calculation(model_name, args.reference_path, args.generated_path)
+            print(f"{model_name} - Frechet Audio Distance Score: {fad_score}")
+            tensorboard_log_dir = os.path.join(args.log_dir, args.generated_path)
+            metric_log_name = f'{args.metric}_{model_name}'
+            log_to_tensorboard(tensorboard_log_dir, args.log_step, fad_score, metric_log_name)
     else:
         print("No supported metrics requested.")
 
