@@ -12,10 +12,14 @@ def run_fad_calculation(model_name, reference_path, generated_path):
         # Build the command for subprocess
         command = ['fadtk', model_name, reference_path, generated_path]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
-
+        main_pattern = r'__main__.py:\d+'
+        result = re.sub(main_pattern, '', result.stdout)
+        space_pattern = r'[\n\t]+'
+        result = re.sub(space_pattern, '', result)
         #
         pattern = r'\d+\.\d+(?=\s*$)'
-        match = re.search(pattern, result.stdout, re.M) # use re.MULTILINE
+        match = re.search(pattern, result, re.M) # use re.MULTILINE
+        
         
         if match:
             fad_score = float(match.group())
@@ -51,30 +55,51 @@ if __name__ == "__main__":
     parser.add_argument("--generated_path", type=str, required=True, help="Path to the generated audio samples.")
     parser.add_argument("--metric", type=str, choices=['frechet_audio_distance'], help="Specify which metric to calculate.")
     parser.add_argument(
-        "--model_name", 
+        "--model_names", 
         type=str, 
+        nargs='+',
+        # choices=[
+        #     "clap-2023",
+        #     "clap-laion-audio",
+        #     "clap-laion-music",
+        #     "encodec-emb",
+        #     "MERT-v1-95M-layer",
+        #     "vggish",
+        #     "dac-44kHz",
+        #     "cdpam-acoustic",
+        #     "cdpam-content",
+        #     "w2v2-base",
+        #     "w2v2-large",
+        #     "hubert-base",
+        #     "hubert-large",
+        #     "wavlm-base",
+        #     "wavlm-base-plus",
+        #     "wavlm-large",
+        #     "whisper-tiny",
+        #     "whisper-base",
+        #     "whisper-small",
+        #     "whisper-medium",
+        #     "whisper-large"
+        # ],
         choices=[
-            "clap-2023",
-            "clap-laion-audio",
-            "clap-laion-music",
-            "encodec-emb",
-            "MERT-v1-95M-layer",
-            "vggish",
-            "dac-44kHz",
-            "cdpam-acoustic",
-            "cdpam-content",
-            "w2v2-base",
-            "w2v2-large",
-            "hubert-base",
-            "hubert-large",
-            "wavlm-base",
-            "wavlm-base-plus",
-            "wavlm-large",
-            "whisper-tiny",
-            "whisper-base",
-            "whisper-small",
-            "whisper-medium",
-            "whisper-large"
+            'clap-2023', 
+            'clap-laion-audio', 
+            'clap-laion-music', 
+            'vggish', 
+            'MERT-v1-95M-1', 
+            'MERT-v1-95M-2', 
+            'MERT-v1-95M-3', 
+            'MERT-v1-95M-4', 
+            'MERT-v1-95M-5', 
+            'MERT-v1-95M-6', 
+            'MERT-v1-95M-7', 
+            'MERT-v1-95M-8', 
+            'MERT-v1-95M-9', 
+            'MERT-v1-95M-10', 
+            'MERT-v1-95M-11', 
+            'MERT-v1-95M', 
+            'encodec-emb', 
+            'encodec-emb-48k'
         ],
         required=True, help="Model name for FAD calculation.")
     parser.add_argument("--log_dir", type=str, default='./models/evaluation', help="Directory for TensorBoard logs.")
