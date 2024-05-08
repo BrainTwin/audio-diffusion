@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/hpc_runs/hpc_testing_inference_ds.out  # name of output filename
+#SBATCH --output=experiments/hpc_runs/hpc_testing_evaluation_ds.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -64,7 +64,7 @@ application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 --reference_path /home/th716/rds/hpc-work/audio-diffusion/cache/waveform \
---generated_path /home/th716/rds/hpc-work/audio-diffusion/cache/waveform \
+--generated_path /home/th716/rds/hpc-work/audio-diffusion/models/ds_64_64_testing_hpc/model_step_2000/samples/audio \
 --metric frechet_audio_distance \
 --model_names clap-laion-audio clap-laion-music vggish \
 --log_dir models/evaluation"
