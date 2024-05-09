@@ -20,6 +20,8 @@ def run_fad_calculation(model_name, reference_path, generated_path):
         pattern = r'\d+\.\d+(?=\s*$)'
         match = re.search(pattern, result, re.M) # use re.MULTILINE
         
+        print(f'\n\nFinished calculating FAD score with model {model_name}. Output from fadtk script is:\n')
+        print(result, end='\n\n')
         
         if match:
             fad_score = float(match.group())
