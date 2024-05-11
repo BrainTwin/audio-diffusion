@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 
-#! BATCH -J base_experiment_ds_64_inference_ms_200000
+#! BATCH -J base_experiment_ds_256_inference_ms_200000
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #! How many whole nodes should be allocated?
@@ -64,7 +64,7 @@ application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py \
 --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/ds_256_256/model_step_200000 \
---num_images 1024
+--num_images 1024 \
 --eval_batch_size 64 \
 --num_inference_steps 1000 \
 --scheduler ddpm" 
