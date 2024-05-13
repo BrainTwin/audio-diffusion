@@ -376,8 +376,8 @@ def main(args):
             accelerator.log(logs, step=global_step)
             
             if accelerator.is_main_process:
-                if ((global_step) % args.save_model_steps == 0 # whether to save our model
-                        or (global_step) % args.save_images_steps == 0 # whether to save sample images
+                if (global_step in args.save_model_steps # whether to save our model
+                        or global_step in args.save_images_steps # whether to save sample images
                         or epoch == args.num_epochs - 1 # whether we've reached max epochs
                         or global_step >= args.max_training_num_steps): # whether we've reached max steps
                     unet = accelerator.unwrap_model(model)
@@ -391,7 +391,7 @@ def main(args):
                     )
 
                 # Save model checkpoint
-                if (global_step) % args.save_model_steps == 0 \
+                if global_step in args.save_model_steps \
                     or epoch == args.num_epochs - 1 \
                     or global_step >= args.max_training_num_steps:
                     model_filename = f"model_step_{global_step}"  # Change the filename to include the step count
@@ -407,7 +407,7 @@ def main(args):
                         )
 
                 # Generate sample images for visual inspection
-                if (global_step) % args.save_images_steps == 0 \
+                if global_step in args.save_images_steps \
                     or global_step >= args.max_training_num_steps:
                     generator = torch.Generator(
                         device=clean_images.device).manual_seed(42)
@@ -498,8 +498,8 @@ if __name__ == "__main__":
     parser.add_argument("--eval_batch_size", type=int, default=16)
     parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument("--max_training_num_steps", type=int, default=10000)
-    parser.add_argument("--save_images_steps", type=int, default=10)
-    parser.add_argument("--save_model_steps", type=int, default=10)
+    parser.add_argument("--save_images_steps", type=int, nargs='+', default=[10000, 25000, 100000, 200000])
+    parser.add_argument("--save_model_steps", type=int, nargs='+', default=[10000, 25000, 100000, 200000])
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
     parser.add_argument("--lr_scheduler", type=str, default="cosine")

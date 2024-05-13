@@ -67,7 +67,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/mc_256_256\
 --hop_length 256 \
 --n_fft 1024 \
---train_batch_size 64 \
+--train_batch_size 32 \
 --eval_batch_size 16 \
 --num_epochs 1000 \
 --max_training_num_steps 200000 \

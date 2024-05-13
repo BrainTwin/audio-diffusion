@@ -21,7 +21,7 @@
 #! Note that the job submission script will enforce no more than 32 cpus per GPU.
 #SBATCH --gres=gpu:1
 #! How much wallclock time will be required?
-#SBATCH --time=00:00:45
+#SBATCH --time=00:00:40
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=ALL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -75,8 +75,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 1000 \
---save_images_steps 50 \
+--save_model_steps 10 90 \
+--save_images_steps 10 90 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
 --train_scheduler ddpm \
