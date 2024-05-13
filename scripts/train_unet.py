@@ -15,15 +15,17 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from datasets import load_dataset, load_from_disk
 from diffusers import (AutoencoderKL, DDIMScheduler, DDPMScheduler,
-                       UNet2DConditionModel, UNet2DModel)
+                       UNet2DConditionModel, UNet2DModel, UNet1DModel)
 from diffusers.optimization import get_scheduler
 # you might need to deprecate diffusers library!
 # https://github.com/huggingface/diffusers/issues/6463
 from diffusers.pipelines.audio_diffusion import Mel
 from diffusers.training_utils import EMAModel # currently using 0.24.0 diffusers library
 from huggingface_hub import HfFolder, Repository, whoami
+import librosa
 from librosa.util import normalize
 from torchvision.transforms import Compose, Normalize, ToTensor
+from torch.utils.data import Dataset, DataLoader
 from tqdm.auto import tqdm
 
 import sys
@@ -47,6 +49,26 @@ def get_full_repo_name(model_id: str,
     else:
         return f"{organization}/{model_id}"
 
+class AudioDataset(Dataset):
+    def __init__(self, directory, target_sample_rate=22050):
+        self.files = list(Path(directory).glob("*.wav"))
+        self.sample_rate = target_sample_rate
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, idx):
+        file_path = str(self.files[idx])
+        audio, sample_rate = librosa.load(file_path, sr=None)
+        # Convert stereo to mono
+        if audio.ndim == 2:
+            audio = librosa.to_mono(audio)
+        # Resample to the target sample rate
+        if sample_rate != self.sample_rate:
+            audio = librosa.resample(audio, sample_rate, self.sample_rate)
+        # Normalize and return
+        return torch.tensor(audio, dtype=torch.float32)
+
 
 def main(args):
     output_dir = os.environ.get("SM_MODEL_DIR", None) or args.output_dir
@@ -58,50 +80,59 @@ def main(args):
         project_dir=logging_dir,
     )
 
-    if args.dataset_name is not None:
-        if os.path.exists(args.dataset_name):
-            dataset = load_from_disk(
-                args.dataset_name,
-                storage_options=args.dataset_config_name)["train"]
+    # LOAD MEL SPECTROGRAMS
+    if not args.use_waveform:
+        if args.dataset_name is not None:
+            if os.path.exists(args.dataset_name):
+                dataset = load_from_disk(
+                    args.dataset_name,
+                    storage_options=args.dataset_config_name)["train"]
+            else:
+                dataset = load_dataset(
+                    args.dataset_name,
+                    args.dataset_config_name,
+                    cache_dir=args.cache_dir,
+                    use_auth_token=True if args.use_auth_token else None,
+                    split="train",
+                )
         else:
             dataset = load_dataset(
-                args.dataset_name,
-                args.dataset_config_name,
+                "imagefolder",
+                data_dir=args.train_data_dir,
                 cache_dir=args.cache_dir,
-                use_auth_token=True if args.use_auth_token else None,
                 split="train",
             )
+        # Determine image resolution
+        resolution = dataset[0]["image"].height, dataset[0]["image"].width
+
+        augmentations = Compose([
+            ToTensor(),
+            Normalize([0.5], [0.5]),
+        ])
+        
+        def transforms(examples):
+            if args.vae is not None and vqvae.config["in_channels"] == 3:
+                images = [
+                    augmentations(image.convert("RGB"))
+                    for image in examples["image"]
+                ]
+            else:
+                images = [augmentations(image) for image in examples["image"]]
+            if args.encodings is not None:
+                encoding = [encodings[file] for file in examples["audio_file"]]
+                return {"input": images, "encoding": encoding}
+            return {"input": images}
+
+        dataset.set_transform(transforms)
+        train_dataloader = torch.utils.data.DataLoader(
+            dataset, batch_size=args.train_batch_size, shuffle=True)
+
+        
+    # LOAD RAW WAVEFORMS
     else:
-        dataset = load_dataset(
-            "imagefolder",
-            data_dir=args.train_data_dir,
-            cache_dir=args.cache_dir,
-            split="train",
-        )
-    # Determine image resolution
-    resolution = dataset[0]["image"].height, dataset[0]["image"].width
+        train_dataset = AudioDataset(args.train_data_dir)
+        train_dataloader = DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
 
-    augmentations = Compose([
-        ToTensor(),
-        Normalize([0.5], [0.5]),
-    ])
-
-    def transforms(examples):
-        if args.vae is not None and vqvae.config["in_channels"] == 3:
-            images = [
-                augmentations(image.convert("RGB"))
-                for image in examples["image"]
-            ]
-        else:
-            images = [augmentations(image) for image in examples["image"]]
-        if args.encodings is not None:
-            encoding = [encodings[file] for file in examples["audio_file"]]
-            return {"input": images, "encoding": encoding}
-        return {"input": images}
-
-    dataset.set_transform(transforms)
-    train_dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=args.train_batch_size, shuffle=True)
 
     if args.encodings is not None:
         encodings = pickle.load(open(args.encodings, "rb"))
@@ -127,31 +158,56 @@ def main(args):
 
     else:
         if args.encodings is None:
-            model = UNet2DModel(
-                sample_size=resolution if vqvae is None else latent_resolution,
-                in_channels=1
-                if vqvae is None else vqvae.config["latent_channels"],
-                out_channels=1
-                if vqvae is None else vqvae.config["latent_channels"],
-                layers_per_block=2,
-                block_out_channels=(128, 128, 256, 256, 512, 512),
-                down_block_types=(
-                    "DownBlock2D",
-                    "DownBlock2D",
-                    "DownBlock2D",
-                    "DownBlock2D",
-                    "AttnDownBlock2D",
-                    "DownBlock2D",
-                ),
-                up_block_types=(
-                    "UpBlock2D",
-                    "AttnUpBlock2D",
-                    "UpBlock2D",
-                    "UpBlock2D",
-                    "UpBlock2D",
-                    "UpBlock2D",
-                ),
-            )
+            if args.use_waveform:
+                model = UNet1DModel(
+                    sample_size=65536,  # Example sample size, adjust as needed
+                    in_channels=1,  # Mono audio input
+                    out_channels=1,  # Mono audio output
+                    layers_per_block=2,
+                    block_out_channels=(128, 128, 256, 256, 512, 512),
+                    down_block_types=(
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "AttnDownBlock2D",
+                        "DownBlock2D",
+                    ),
+                    up_block_types=(
+                        "UpBlock2D",
+                        "AttnUpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                    ),
+                )
+            else:
+                model = UNet2DModel(
+                    sample_size=resolution if vqvae is None else latent_resolution,
+                    in_channels=1
+                    if vqvae is None else vqvae.config["latent_channels"],
+                    out_channels=1
+                    if vqvae is None else vqvae.config["latent_channels"],
+                    layers_per_block=2,
+                    block_out_channels=(128, 128, 256, 256, 512, 512),
+                    down_block_types=(
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "AttnDownBlock2D",
+                        "DownBlock2D",
+                    ),
+                    up_block_types=(
+                        "UpBlock2D",
+                        "AttnUpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                    ),
+                )
 
         else:
             model = UNet2DConditionModel(
@@ -433,6 +489,8 @@ if __name__ == "__main__":
         default=None,
         help="A folder containing the training data.",
     )
+    parser.add_argument("--use_waveform", type=bool, default=False)
+    
     parser.add_argument("--output_dir", type=str, default="ddpm-model-64")
     parser.add_argument("--overwrite_output_dir", type=bool, default=False)
     parser.add_argument("--cache_dir", type=str, default=None)
