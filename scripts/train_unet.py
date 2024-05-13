@@ -376,12 +376,6 @@ def main(args):
             accelerator.log(logs, step=global_step)
             
             if accelerator.is_main_process:
-                pipeline = AudioDiffusionPipeline(
-                    vqvae=vqvae,
-                    unet=unet,
-                    mel=mel,
-                    scheduler=train_noise_scheduler,
-                )
                 if ((global_step) % args.save_model_steps == 0 # whether to save our model
                         or (global_step) % args.save_images_steps == 0 # whether to save sample images
                         or epoch == args.num_epochs - 1 # whether we've reached max epochs
@@ -389,9 +383,15 @@ def main(args):
                     unet = accelerator.unwrap_model(model)
                     if args.use_ema:
                         ema_model.copy_to(unet.parameters())
+                    pipeline = AudioDiffusionPipeline(
+                        vqvae=vqvae,
+                        unet=unet,
+                        mel=mel,
+                        scheduler=train_noise_scheduler,
+                    )
 
                 # Save model checkpoint
-                if (global_step + 1) % args.save_model_steps == 0 \
+                if (global_step) % args.save_model_steps == 0 \
                     or epoch == args.num_epochs - 1 \
                     or global_step >= args.max_training_num_steps:
                     model_filename = f"model_step_{global_step}"  # Change the filename to include the step count
@@ -407,7 +407,7 @@ def main(args):
                         )
 
                 # Generate sample images for visual inspection
-                if (global_step + 1) % args.save_images_steps == 0 \
+                if (global_step) % args.save_images_steps == 0 \
                     or global_step >= args.max_training_num_steps:
                     generator = torch.Generator(
                         device=clean_images.device).manual_seed(42)
