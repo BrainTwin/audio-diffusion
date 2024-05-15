@@ -7,29 +7,29 @@ from torch.utils.tensorboard import SummaryWriter
 def run_fad_calculation(model_name, reference_path, generated_path):
     """
     Runs the FAD calculation as a subprocess and captures the output.
+    If the subprocess fails, it returns None instead of raising an error.
     """
     try:
-        # Build the command for subprocess
         command = ['fadtk', model_name, reference_path, generated_path]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         main_pattern = r'__main__.py:\d+'
         result = re.sub(main_pattern, '', result.stdout)
         space_pattern = r'[\n\t]+'
         result = re.sub(space_pattern, '', result)
-        #
+
         pattern = r'\d+\.\d+(?=\s*$)'
-        match = re.search(pattern, result, re.M) # use re.MULTILINE
-        
-        print(f'\n\nFinished calculating FAD score with model {model_name}. Output from fadtk script is:\n')
-        print(result, end='\n\n')
+        match = re.search(pattern, result, re.M)
         
         if match:
             fad_score = float(match.group())
             return fad_score
         else:
-            raise ValueError("FAD score not found in subprocess output.")
+            print(f"Warning: FAD score not found in subprocess output for model {model_name}")
+            return None
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to run subprocess: {e}")
+        print(f"Error: Failed to run subprocess for model {model_name}: {e}")
+        return None
+
 
 def log_to_tensorboard(log_dir, step, fad_score, metric_log_name):
     """
@@ -39,22 +39,25 @@ def log_to_tensorboard(log_dir, step, fad_score, metric_log_name):
         writer.add_scalar(metric_log_name, fad_score, step)
 
 def main(args):
-    # Check if the metric to calculate is Frechet Audio Distance
-    if args.metric == "frechet_audio_distance":
+    if "frechet_audio_distance" in args.metric:
         print("Calculating Frechet Audio Distance...")
         for model_name in args.model_names:
             fad_score = run_fad_calculation(model_name, args.reference_path, args.generated_path)
-            print(f"{model_name} - Frechet Audio Distance Score: {fad_score}")
-            metric_log_name = f'{args.metric}_{model_name}'
-            log_to_tensorboard(args.log_dir, args.log_step, fad_score, metric_log_name)
+            if fad_score is not None:
+                print(f"{model_name} - Frechet Audio Distance Score: {fad_score}")
+                metric_log_name = f'{args.metric}_{model_name}'
+                log_to_tensorboard(args.log_dir, args.log_step, fad_score, metric_log_name)
+            else:
+                print(f"Error: Could not calculate FAD score for model {model_name}. Skipping to next model.")
     else:
         print("No supported metrics requested.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate audio samples using various metrics.")
     parser.add_argument("--reference_path", type=str, required=True, help="Path to the reference audio samples.")
     parser.add_argument("--generated_path", type=str, required=True, help="Path to the generated audio samples.")
-    parser.add_argument("--metric", type=str, choices=['frechet_audio_distance'], help="Specify which metric to calculate.")
+    parser.add_argument("--metric", type=str, nargs='+', default=['frechet_audio_distance'], choices=['frechet_audio_distance'], help="Specify which metric to calculate.")
     parser.add_argument(
         "--model_names", 
         type=str, 
