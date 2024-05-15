@@ -45,7 +45,7 @@ def main(args):
             fad_score = run_fad_calculation(model_name, args.reference_path, args.generated_path)
             if fad_score is not None:
                 print(f"{model_name} - Frechet Audio Distance Score: {fad_score}")
-                metric_log_name = f'{args.metric}_{model_name}'
+                metric_log_name = f'fad_{model_name}'
                 log_to_tensorboard(args.log_dir, args.log_step, fad_score, metric_log_name)
             else:
                 print(f"Error: Could not calculate FAD score for model {model_name}. Skipping to next model.")
