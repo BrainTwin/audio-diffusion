@@ -28,14 +28,33 @@ inference_configs = [
     ("--num_inference_steps 100 --scheduler ddim", "100_ddim")
 ]
 
-# Template for the slurm script
-slurm_template = """#!/bin/bash
+# Generate each script
+for config in model_configs:
+    model_path_template = base_path.format(config=config)
+    for checkpoint in checkpoints:
+        full_model_path = model_path_template.replace('model_step_x', checkpoint)
+        for inf_config, suffix in inference_configs:
+            # Include model config in the job name and output file path
+            job_name = f"{config}_{checkpoint}_{suffix}"
+            script_name = f"{job_name}.wilkes3"
+            output_path = os.path.join(base_dir, f"{job_name}.out")
+            
+            # Determine the correct SLURM time based on the config
+            if '64_64' in config:
+                slurm_time = "00:25:00"
+            elif '256_256' in config:
+                slurm_time = "01:00:00"
+            else:
+                slurm_time = "00:40:00"  # Default time if needed
+            
+            # Template for the slurm script, using the determined slurm_time
+            slurm_template = f"""#!/bin/bash
 #SBATCH -J {job_name}
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:40:00
+#SBATCH --time={slurm_time}
 #SBATCH --mail-type=ALL
 #SBATCH --output={output_path}
 #SBATCH -p ampere
@@ -50,7 +69,7 @@ conda init bash
 conda activate audiodiff_env
 
 application="accelerate"
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path {model_path} --num_images 1024 --eval_batch_size 64 {inference_options}"
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path {full_model_path} --num_images 1024 --eval_batch_size 64 {inf_config}"
 
 CMD="$application $options"
 workdir="/home/th716/rds/hpc-work/audio-diffusion"
@@ -74,27 +93,8 @@ echo "$CMD"
 eval $CMD
 """
 
-# Generate each script
-for config in model_configs:
-    model_path_template = base_path.format(config=config)
-    for checkpoint in checkpoints:
-        full_model_path = model_path_template.replace('model_step_x', checkpoint)
-        for inf_config, suffix in inference_configs:
-            # Include model config in the job name and output file path
-            job_name = f"{config}_{checkpoint}_{suffix}"
-            script_name = f"{job_name}.wilkes3"
-            output_path = os.path.join(base_dir, f"{job_name}.out")
-            
-            # Format the slurm script with specific configuration
-            script_content = slurm_template.format(
-                job_name=job_name,
-                output_path=output_path,
-                model_path=full_model_path,
-                inference_options=inf_config
-            )
-            
             # Write the script to a file
             with open(os.path.join(base_dir, script_name), 'w') as script_file:
-                script_file.write(script_content)
+                script_file.write(slurm_template)
 
             print(f"Generated script: {script_name}")

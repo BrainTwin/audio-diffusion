@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 
-#! BATCH -J base_experiments_inference
+#! BATCH -J hpc_testing_base_experiment_ds_64_training
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #! How many whole nodes should be allocated?
@@ -21,14 +21,14 @@
 #! Note that the job submission script will enforce no more than 32 cpus per GPU.
 #SBATCH --gres=gpu:1
 #! How much wallclock time will be required?
-#SBATCH --time=00:40:00
+#SBATCH --time=00:00:40
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=ALL
 #! Uncomment this to prevent the job from being requeued (e.g. if
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/hpc_runs/base_experiments_inference.out  # name of output filename
+#SBATCH --output=experiments/hpc_runs/hpc_testing_base_experiment_ds_64_training.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -62,12 +62,25 @@ application="accelerate"
 
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
-/home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py \
---pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/ds_64_64/model_step_10000 \
---num_images 1024 \
---eval_batch_size 64 \
+/home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/drum_samples/mel_spec_64_64 \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ds_64_64 \
+--hop_length 256 \
+--n_fft 1024 \
+--train_batch_size 32 \
+--eval_batch_size 16 \
+--num_epochs 1000 \
+--max_training_num_steps 10000 \
+--gradient_accumulation_steps 1 \
+--learning_rate 1e-4 \
+--lr_warmup_steps 500 \
+--mixed_precision no \
+--save_model_steps 10 90 \
+--save_images_steps 10 90 \
+--num_train_steps 1000 \
 --num_inference_steps 1000 \
---scheduler ddpm" 
+--train_scheduler ddpm \
+--test_scheduler ddpm"
 
 CMD="$application $options"
 
