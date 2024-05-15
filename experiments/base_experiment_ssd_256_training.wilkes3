@@ -75,8 +75,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 500 1000 2500 5000 10000 20000 40000 \
---save_images_steps 500 1000 2500 5000 10000 20000 40000 \
+--save_model_steps 100 500 1000 2500 5000 10000 20000 40000 \
+--save_images_steps 100 500 1000 2500 5000 10000 20000 40000 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
 --train_scheduler ddpm \
