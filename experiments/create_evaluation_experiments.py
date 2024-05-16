@@ -36,7 +36,7 @@ slurm_template = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:25:00
+#SBATCH --time=00:40:00
 #SBATCH --mail-type=ALL
 #SBATCH --output={output_file}
 #SBATCH -p ampere
