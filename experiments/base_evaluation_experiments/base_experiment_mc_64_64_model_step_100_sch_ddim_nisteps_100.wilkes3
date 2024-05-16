@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#SBATCH -J base_experiment_mc_64_64_model_step_100_sch_ddim_nisteps_100
+#SBATCH -A COMPUTERLAB-SL2-GPU
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --gres=gpu:1
+#SBATCH --time=00:08:00
+#SBATCH --mail-type=ALL
+#SBATCH --output=experiments/hpc_runs/base_experiment_mc_64_64_model_step_100_sch_ddim_nisteps_100.out
+#SBATCH -p ampere
+
+numnodes=$SLURM_JOB_NUM_NODES
+numtasks=$SLURM_NTASKS
+mpi_tasks_per_node=$(echo "$SLURM_TASKS_PER_NODE" | sed -e  's/^\([0-9][0-9]*\).*$//')
+
+. /etc/profile.d/modules.sh
+module purge
+module load rhel8/default-amp
+module load miniconda/3
+
+source ~/.bashrc  
+
+conda init bash
+conda activate audiodiff_env
+
+application="accelerate"
+
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py --reference_path /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/mc_64_64/model_step_100/samples/audio/sch_ddim_nisteps_100 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/mc_64_64/samples/audio/sch_ddim_nisteps_100 --metric frechet_audio_distance --model_names clap-laion-audio clap-laion-music vggish clap-2023 encodec-emb-48k encodec-emb MERT-v1-95M"
+
+CMD="$application $options"
+
+workdir="/home/th716/rds/hpc-work/audio-diffusion"
+
+cd $workdir
+echo -e "Changed directory to `pwd`.
+"
+
+JOBID=$SLURM_JOB_ID
+
+echo -e "JobID: $JOBID
+======"
+echo "Time: `date`"
+echo "Running on master node: `hostname`"
+echo "Current directory: `pwd`"
+
+if [ "$SLURM_JOB_NODELIST" ]; then
+    export NODEFILE=`generate_pbs_nodefile`
+    cat $NODEFILE | uniq > machine.file.$JOBID
+    echo -e "
+Nodes allocated:
+================"
+    echo `cat machine.file.$JOBID | sed -e 's/\..*$//g'`
+fi
+
+echo -e '
+numtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)'
+
+echo -e "
+Executing command:
+==================
+$CMD
+"
+
+eval $CMD
