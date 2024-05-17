@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/hpc_runs/base_experiment_vae_ssd_256_256_training.out  # name of output filename
+#SBATCH --output=experiments/vae_training_experiments/hpc_runs/base_experiment_vae_ssd_256_256_training.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
