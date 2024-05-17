@@ -102,6 +102,7 @@ def main(args):
                 cache_dir=args.cache_dir,
                 split="train",
             )
+            
         # Determine image resolution
         resolution = dataset[0]["image"].height, dataset[0]["image"].width
 
@@ -132,8 +133,7 @@ def main(args):
     else:
         train_dataset = AudioDataset(args.train_data_dir)
         train_dataloader = DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
-
-
+    
     if args.encodings is not None:
         encodings = pickle.load(open(args.encodings, "rb"))
 
@@ -160,26 +160,26 @@ def main(args):
         if args.encodings is None:
             if args.use_waveform:
                 model = UNet1DModel(
-                    sample_size=65536,  # Example sample size, adjust as needed
+                    sample_size=args.waveform_resolution,  # Example sample size, adjust as needed
                     in_channels=1,  # Mono audio input
                     out_channels=1,  # Mono audio output
                     layers_per_block=2,
                     block_out_channels=(128, 128, 256, 256, 512, 512),
                     down_block_types=(
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "AttnDownBlock2D",
-                        "DownBlock2D",
+                        "DownBlock1D",
+                        "DownBlock1D",
+                        "DownBlock1D",
+                        "DownBlock1D",
+                        "AttnDownBlock1D",
+                        "DownBlock1D",
                     ),
                     up_block_types=(
-                        "UpBlock2D",
-                        "AttnUpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
+                        "UpBlock1D",
+                        "AttnUpBlock1D",
+                        "UpBlock1D",
+                        "UpBlock1D",
+                        "UpBlock1D",
+                        "UpBlock1D",
                     ),
                 )
             else:
@@ -490,6 +490,7 @@ if __name__ == "__main__":
         help="A folder containing the training data.",
     )
     parser.add_argument("--use_waveform", type=bool, default=False)
+    parser.add_argument("--waveform_resolution", type=int, default=65536)
     
     parser.add_argument("--output_dir", type=str, default="ddpm-model-64")
     parser.add_argument("--overwrite_output_dir", type=bool, default=False)
