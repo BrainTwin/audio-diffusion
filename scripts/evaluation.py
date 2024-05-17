@@ -30,7 +30,6 @@ def run_fad_calculation(model_name, reference_path, generated_path):
         print(f"Error: Failed to run subprocess for model {model_name}: {e}")
         return None
 
-
 def log_to_tensorboard(log_dir, step, fad_score, metric_log_name):
     """
     Logs the given FAD score to TensorBoard.
@@ -38,53 +37,39 @@ def log_to_tensorboard(log_dir, step, fad_score, metric_log_name):
     with SummaryWriter(log_dir) as writer:
         writer.add_scalar(metric_log_name, fad_score, step)
 
+def get_dataset_name_from_path(path):
+    if 'drum_samples' in path: return 'drum_samples'
+    elif 'spotify_sleep_dataset' in path: return 'spotify_sleep_dataset'
+    elif 'musiccaps' in path: return 'musiccaps'
+    elif 'fma_pop' in path: return 'fma_pop'
+    else: return None
+
 def main(args):
     if "frechet_audio_distance" in args.metric:
         print("Calculating Frechet Audio Distance...")
-        for model_name in args.model_names:
-            fad_score = run_fad_calculation(model_name, args.reference_path, args.generated_path)
-            if fad_score is not None:
-                print(f"{model_name} - Frechet Audio Distance Score: {fad_score}")
-                metric_log_name = f'fad_{model_name}'
-                log_to_tensorboard(args.log_dir, args.log_step, fad_score, metric_log_name)
-            else:
-                print(f"Error: Could not calculate FAD score for model {model_name}. Skipping to next model.")
+        for reference_path in args.reference_paths:
+            for model_name in args.model_names:
+                fad_score = run_fad_calculation(model_name, reference_path, args.generated_path)
+                if fad_score is not None:
+                    print(f"{model_name} - Frechet Audio Distance Score: {fad_score} (Reference: {reference_path})")
+                    reference_dataset_name = get_dataset_name_from_path(reference_path)
+                    generated_dataset_name = get_dataset_name_from_path(args.generated_path)
+                    metric_log_name = f'fad_{model_name}_ref_{reference_dataset_name}_gen_{generated_dataset_name}'
+                    log_to_tensorboard(args.log_dir, args.log_step, fad_score, metric_log_name)
+                else:
+                    print(f"Error: Could not calculate FAD score for model {model_name} with reference {reference_path}. Skipping to next model.")
     else:
         print("No supported metrics requested.")
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate audio samples using various metrics.")
-    parser.add_argument("--reference_path", type=str, required=True, help="Path to the reference audio samples.")
+    parser.add_argument("--reference_paths", type=str, nargs='+', required=True, help="Paths to the reference audio samples.")
     parser.add_argument("--generated_path", type=str, required=True, help="Path to the generated audio samples.")
     parser.add_argument("--metric", type=str, nargs='+', default=['frechet_audio_distance'], choices=['frechet_audio_distance'], help="Specify which metric to calculate.")
     parser.add_argument(
         "--model_names", 
         type=str, 
         nargs='+',
-        # choices=[
-        #     "clap-2023",
-        #     "clap-laion-audio",
-        #     "clap-laion-music",
-        #     "encodec-emb",
-        #     "MERT-v1-95M-layer",
-        #     "vggish",
-        #     "dac-44kHz",
-        #     "cdpam-acoustic",
-        #     "cdpam-content",
-        #     "w2v2-base",
-        #     "w2v2-large",
-        #     "hubert-base",
-        #     "hubert-large",
-        #     "wavlm-base",
-        #     "wavlm-base-plus",
-        #     "wavlm-large",
-        #     "whisper-tiny",
-        #     "whisper-base",
-        #     "whisper-small",
-        #     "whisper-medium",
-        #     "whisper-large"
-        # ],
         choices=[
             'clap-2023', 
             'clap-laion-audio', 
