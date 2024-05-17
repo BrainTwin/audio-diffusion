@@ -59,7 +59,7 @@ application="accelerate"
 
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
---reference_path /home/th716/rds/hpc-work/audio-diffusion/cache/{dataset_name}/waveform \
+--reference_paths {reference_paths} \
 --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/{model_step_X}/samples/audio/{sample_path} \
 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/samples/audio/{sample_path} \
 --metric frechet_audio_distance \
@@ -104,11 +104,21 @@ for model_name in model_names:
             job_name = f"base_experiment_{model_name}_{checkpoint}_{sample_path}"
             output_file = f"experiments/hpc_runs/{job_name}.out"
             
+            # Generate the reference paths, ensuring no duplicates
+            reference_paths = [
+                f"/home/th716/rds/hpc-work/audio-diffusion/cache/{dataset_name}/waveform",
+                "/home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform",
+                "/home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform"
+            ]
+            if dataset_name == "musiccaps":
+                reference_paths = list(set(reference_paths))  # Remove duplicates
+            reference_paths_str = " ".join(reference_paths)
+
             # Generate the script content
             script_content = slurm_template.format(
                 job_name=job_name,
                 output_file=output_file,
-                dataset_name=dataset_name,
+                reference_paths=reference_paths_str,
                 model_name=model_name,
                 model_step_X=checkpoint,
                 sample_path=sample_path

@@ -26,7 +26,7 @@ conda activate audiodiff_env
 
 application="accelerate"
 
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py --reference_path /home/th716/rds/hpc-work/audio-diffusion/cache/drum_samples/waveform --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/ds_256_256/model_step_5000/samples/audio/sch_ddpm_nisteps_1000 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/ds_256_256/samples/audio/sch_ddpm_nisteps_1000 --metric frechet_audio_distance --model_names clap-laion-audio clap-laion-music vggish clap-2023 encodec-emb-48k encodec-emb MERT-v1-95M"
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/drum_samples/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/ds_256_256/model_step_5000/samples/audio/sch_ddpm_nisteps_1000 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/ds_256_256/samples/audio/sch_ddpm_nisteps_1000 --metric frechet_audio_distance --model_names clap-laion-audio clap-laion-music vggish clap-2023 encodec-emb-48k encodec-emb MERT-v1-95M"
 
 CMD="$application $options"
 
