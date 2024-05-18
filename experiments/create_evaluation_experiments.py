@@ -61,7 +61,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 --reference_paths {reference_paths} \
 --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/{model_step_X}/samples/audio/{sample_path} \
---log_dir /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/samples/audio/{sample_path} \
+--log_dir /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/{model_step_X}/samples/{sample_path} \
 --metric frechet_audio_distance \
 --model_names clap-laion-audio clap-laion-music vggish clap-2023 encodec-emb-48k encodec-emb MERT-v1-95M"
 
