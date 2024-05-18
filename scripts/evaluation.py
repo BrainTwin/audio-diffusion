@@ -14,6 +14,8 @@ def run_fad_calculation(model_name, reference_path, generated_path):
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         main_pattern = r'__main__.py:\d+'
         result = re.sub(main_pattern, '', result.stdout)
+        print(f'Raw result is: {result}\n\n')
+        
         space_pattern = r'[\n\t]+'
         result = re.sub(space_pattern, '', result)
 
@@ -48,7 +50,11 @@ def main(args):
     if "frechet_audio_distance" in args.metric:
         print("Calculating Frechet Audio Distance...")
         for reference_path in args.reference_paths:
+            print('======================================')
+            print(f'\n\nNow running evaluation experiments for reference path: {reference_path}\n')
             for model_name in args.model_names:
+                print('------------------------------------')
+                print(f'\nNow running evaluation experiments for model: {model_name}\n')
                 fad_score = run_fad_calculation(model_name, reference_path, args.generated_path)
                 if fad_score is not None:
                     print(f"{model_name} - Frechet Audio Distance Score: {fad_score} (Reference: {reference_path})")
