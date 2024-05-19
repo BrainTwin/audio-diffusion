@@ -2,14 +2,18 @@ import subprocess
 
 def run_fadtk(model_name, dir1, dir2):
     command = ["fadtk", model_name, dir1, dir2]
-    result = subprocess.run(command, capture_output=True, text=True)
-    
-    print(f"Command: {' '.join(command)}")
-    print("Output:")
-    print(result.stdout)
-    if result.stderr:
-        print("Error:")
-        print(result.stderr)
+    try:
+        result = subprocess.run(command, capture_output=True, text=True)
+        
+        print(f"Command: {' '.join(command)}")
+        print("Output:")
+        print(result.stdout)
+        if result.stderr:
+            print("Error:")
+            print(result.stderr)
+    except Exception as e:
+        print(f"An error occurred while running the command: {' '.join(command)}")
+        print(f"Exception: {e}")
 
 def main():
     model_names = [
