@@ -36,7 +36,7 @@ slurm_template = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:02:00
+#SBATCH --time=00:40:00
 #SBATCH --mail-type=ALL
 #SBATCH --output={output_file}
 #SBATCH -p ampere
@@ -53,7 +53,7 @@ module load miniconda/3
 source ~/.bashrc  
 
 conda init bash
-conda activate fadtk_env
+conda activate audiodiff_env
 
 application="python"
 
