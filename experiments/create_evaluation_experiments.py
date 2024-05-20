@@ -53,12 +53,11 @@ module load miniconda/3
 source ~/.bashrc  
 
 conda init bash
-conda activate audiodiff_env
+conda activate fadtk_env
 
-application="accelerate"
+application="python"
 
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
-/home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
+options="/home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 --reference_paths {reference_paths} \
 --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/{model_step_X}/samples/audio/{sample_path} \
 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/{model_name}/{model_step_X}/samples/{sample_path} \
