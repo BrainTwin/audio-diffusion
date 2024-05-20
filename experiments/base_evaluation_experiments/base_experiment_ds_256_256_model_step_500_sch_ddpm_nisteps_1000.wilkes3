@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:40:00
+#SBATCH --time=00:00:02
 #SBATCH --mail-type=ALL
 #SBATCH --output=experiments/hpc_runs/base_experiment_ds_256_256_model_step_500_sch_ddpm_nisteps_1000.out
 #SBATCH -p ampere

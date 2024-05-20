@@ -28,6 +28,8 @@ def main():
     
     for dir1, dir2 in dir_pairs:
         for model_name in model_names:
+            print(f'Now calculating embeddings with model name {model_name}')
+            print(f'...and datasets {dir1} and {dir2}')
             run_fadtk(model_name, dir1, dir2)
 
 if __name__ == "__main__":
