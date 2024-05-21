@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 
-#! BATCH -J base_experiment_vae_mc_256
+#! BATCH -J base_experiment_ssd_512_64_training
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #! How many whole nodes should be allocated?
@@ -21,14 +21,14 @@
 #! Note that the job submission script will enforce no more than 32 cpus per GPU.
 #SBATCH --gres=gpu:1
 #! How much wallclock time will be required?
-#SBATCH --time=03:30:00
+#SBATCH --time=15:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=ALL
 #! Uncomment this to prevent the job from being requeued (e.g. if
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/vae_training_experiments/hpc_runs/base_experiment_vae_mc_256_256_training.out  # name of output filename
+#SBATCH --output=experiments/hpc_runs/base_experiment_ssd_512_64_training.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -63,8 +63,8 @@ application="accelerate"
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
---dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_256_256 \
---output_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_mc_256_256 \
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_512_64 \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ssd_512_64 \
 --hop_length 256 \
 --n_fft 1024 \
 --train_batch_size 32 \
@@ -77,9 +77,6 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --mixed_precision no \
 --save_model_steps 100 500 1000 2500 5000 10000 20000 40000 \
 --save_images_steps 100 500 1000 2500 5000 10000 20000 40000 \
-
---vae teticio/latent-audio-diffusion-256 \
-
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
 --train_scheduler ddpm \
