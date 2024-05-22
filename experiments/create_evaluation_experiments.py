@@ -2,9 +2,9 @@ import os
 
 # Define the lists of values to iterate over
 model_names = [
-    "ds_64_64", "ds_256_256",
-    "ssd_64_64", "ssd_256_256",
-    "mc_64_64", "mc_256_256"
+    # "ds_64_64", "ds_256_256",
+    # "ssd_64_64", "ssd_256_256",
+    # "mc_64_64", "mc_256_256",
 ]
 
 checkpoints = [
@@ -19,9 +19,9 @@ inference_configs = [
 
 # Mapping model prefixes to datasets
 model_to_dataset = {
-    "ds": "drum_samples",
+    # "ds": "drum_samples",
     "ssd": "spotify_sleep_dataset",
-    "mc": "musiccaps"
+    # "mc": "musiccaps"
 }
 
 # Directory to save the generated SLURM scripts

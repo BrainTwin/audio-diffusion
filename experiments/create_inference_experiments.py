@@ -8,9 +8,10 @@ os.makedirs(base_dir, exist_ok=True)
 
 # List of model base paths
 model_configs = [
-    "ds_64_64", "ds_256_256",
-    "ssd_64_64", "ssd_256_256",
-    "mc_64_64", "mc_256_256"
+    # "ds_64_64", "ds_256_256",
+    # "ssd_64_64", "ssd_256_256",
+    # "mc_64_64", "mc_256_256",
+    "ssd_512_32", "ssd_512_64", "ssd_512_128"
 ]
 
 base_path = "/home/th716/rds/hpc-work/audio-diffusion/models/{config}/model_step_x"

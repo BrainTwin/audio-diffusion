@@ -34,8 +34,22 @@ print(sys.path)
 from audiodiffusion.pipeline_audio_diffusion import AudioDiffusionPipeline
 
 
+# Import statements remain unchanged...
 
 logger = get_logger(__name__)
+
+def denoise_waveforms(model, noisy_waveforms, num_inference_steps, scheduler):
+    model.eval()
+    with torch.no_grad():
+        for t in tqdm(range(num_inference_steps), desc='Running inference'):
+            # Get the model prediction
+            noise_pred = model(noisy_waveforms, t).sample
+            # Use the scheduler to compute the denoised waveform
+            noisy_waveforms = scheduler.step(noise_pred, t, noisy_waveforms).prev_sample
+    return noisy_waveforms
+
+
+
 
 
 def get_full_repo_name(model_id: str,
@@ -50,25 +64,41 @@ def get_full_repo_name(model_id: str,
         return f"{organization}/{model_id}"
 
 class AudioDataset(Dataset):
-    def __init__(self, directory, target_sample_rate=22050):
+    def __init__(self, directory, target_sample_rate=22050, chunk_length=65536):
         self.files = list(Path(directory).glob("*.wav"))
         self.sample_rate = target_sample_rate
+        self.chunk_length = chunk_length
+        self.data = []
+        self._prepare_dataset()
+
+    def _prepare_dataset(self):
+        for file_path in self.files:
+            audio, sample_rate = librosa.load(file_path, sr=None)
+            if audio.ndim == 2:
+                audio = librosa.to_mono(audio)
+            if sample_rate != self.sample_rate:
+                audio = librosa.resample(audio, orig_sr=sample_rate, target_sr=self.sample_rate)
+            audio = librosa.util.normalize(audio)
+            self._split_and_store_audio(audio)
+
+    def _split_and_store_audio(self, audio):
+        total_length = len(audio)
+        num_chunks = total_length // self.chunk_length
+        for i in range(num_chunks):
+            chunk = audio[i * self.chunk_length:(i + 1) * self.chunk_length]
+            self.data.append(chunk)
+        if total_length % self.chunk_length != 0:
+            last_chunk = audio[num_chunks * self.chunk_length:]
+            pad_width = self.chunk_length - len(last_chunk)
+            last_chunk = np.pad(last_chunk, (0, pad_width), 'constant')
+            self.data.append(last_chunk)
 
     def __len__(self):
-        return len(self.files)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        file_path = str(self.files[idx])
-        audio, sample_rate = librosa.load(file_path, sr=None)
-        # Convert stereo to mono
-        if audio.ndim == 2:
-            audio = librosa.to_mono(audio)
-        # Resample to the target sample rate
-        if sample_rate != self.sample_rate:
-            audio = librosa.resample(audio, sample_rate, self.sample_rate)
-        # Normalize and return
-        return torch.tensor(audio, dtype=torch.float32)
-
+        audio_chunk = self.data[idx]
+        return torch.tensor(audio_chunk, dtype=torch.float32)
 
 def main(args):
     output_dir = os.environ.get("SM_MODEL_DIR", None) or args.output_dir
@@ -80,7 +110,8 @@ def main(args):
         project_dir=logging_dir,
     )
 
-    # LOAD MEL SPECTROGRAMS
+    # Conditional initialization of Mel
+    mel = None
     if not args.use_waveform:
         if args.dataset_name is not None:
             if os.path.exists(args.dataset_name):
@@ -128,12 +159,11 @@ def main(args):
         train_dataloader = torch.utils.data.DataLoader(
             dataset, batch_size=args.train_batch_size, shuffle=True)
 
-        
     # LOAD RAW WAVEFORMS
     else:
-        train_dataset = AudioDataset(args.train_data_dir)
+        train_dataset = AudioDataset(args.train_data_dir, chunk_length=args.waveform_resolution)
         train_dataloader = DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
-    
+
     if args.encodings is not None:
         encodings = pickle.load(open(args.encodings, "rb"))
 
@@ -151,11 +181,11 @@ def main(args):
 
     if args.from_pretrained is not None:
         pipeline = AudioDiffusionPipeline.from_pretrained(args.from_pretrained)
-        mel = pipeline.mel
+        if not args.use_waveform:
+            mel = pipeline.mel
         model = pipeline.unet
         if hasattr(pipeline, "vqvae"):
             vqvae = pipeline.vqvae
-
     else:
         if args.encodings is None:
             if args.use_waveform:
@@ -208,7 +238,6 @@ def main(args):
                         "UpBlock2D",
                     ),
                 )
-
         else:
             model = UNet2DConditionModel(
                 sample_size=resolution if vqvae is None else latent_resolution,
@@ -234,8 +263,6 @@ def main(args):
             )
 
     # Initialize schedulers
-    # TODO
-    # add cosine schedule and experiment with scheduling
     if args.train_scheduler == "ddpm":
         train_noise_scheduler = DDPMScheduler(
             num_train_timesteps=args.num_train_steps)
@@ -249,6 +276,8 @@ def main(args):
     else:
         test_noise_scheduler = DDIMScheduler(
             num_train_timesteps=args.num_inference_steps)
+        
+    test_noise_scheduler.set_timesteps(args.num_inference_steps, device=accelerator.device)
 
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -288,13 +317,14 @@ def main(args):
         run = os.path.split(__file__)[-1].split(".")[0]
         accelerator.init_trackers(run)
 
-    mel = Mel(
-        x_res=resolution[1],
-        y_res=resolution[0],
-        hop_length=args.hop_length,
-        sample_rate=args.sample_rate,
-        n_fft=args.n_fft,
-    )
+    if not args.use_waveform:
+        mel = Mel(
+            x_res=resolution[1],
+            y_res=resolution[0],
+            hop_length=args.hop_length,
+            sample_rate=args.sample_rate,
+            n_fft=args.n_fft,
+        )
 
     global_step = 0
     total_start_time = time.time()
@@ -317,39 +347,39 @@ def main(args):
 
         model.train()
         for step, batch in enumerate(train_dataloader):
-            clean_images = batch["input"]
+            if args.use_waveform:
+                clean_waveforms = batch
+                clean_waveforms = clean_waveforms.unsqueeze(1)  # shape: [batch_size, 1, sample_size]
+                clean_images = None
+            else:
+                clean_images = batch["input"]
+                clean_waveforms = None
 
-            if vqvae is not None:
+            if vqvae is not None and clean_images is not None:
                 vqvae.to(clean_images.device)
                 with torch.no_grad():
                     clean_images = vqvae.encode(
                         clean_images).latent_dist.sample()
-                # Scale latent images to ensure approximately unit variance
                 clean_images = clean_images * 0.18215
 
-            # Sample noise that we'll add to the images
-            noise = torch.randn(clean_images.shape).to(clean_images.device)
-            bsz = clean_images.shape[0]
-            # Sample a random timestep for each image
+            noise = torch.randn(clean_images.shape if clean_images is not None else clean_waveforms.shape).to(clean_images.device if clean_images is not None else clean_waveforms.device)
+            bsz = clean_images.shape[0] if clean_images is not None else clean_waveforms.shape[0]
             timesteps = torch.randint(
                 0,
                 train_noise_scheduler.config.num_train_timesteps,
                 (bsz, ),
-                device=clean_images.device,
+                device=noise.device,
             ).long()
 
-            # Add noise to the clean images according to the noise magnitude at each timestep
-            # (this is the forward diffusion process)
-            noisy_images = train_noise_scheduler.add_noise(clean_images, noise,
-                                                     timesteps)
+            noisy_images = train_noise_scheduler.add_noise(clean_images, noise, timesteps) if clean_images is not None else None
+            noisy_waveforms = train_noise_scheduler.add_noise(clean_waveforms, noise, timesteps) if clean_waveforms is not None else None
 
             with accelerator.accumulate(model):
-                # Predict the noise residual
                 if args.encodings is not None:
                     noise_pred = model(noisy_images, timesteps,
                                        batch["encoding"])["sample"]
                 else:
-                    noise_pred = model(noisy_images, timesteps)["sample"]
+                    noise_pred = model(noisy_images if noisy_images is not None else noisy_waveforms, timesteps)["sample"]
                 loss = F.mse_loss(noise_pred, noise)
                 accelerator.backward(loss)
 
@@ -364,7 +394,6 @@ def main(args):
             progress_bar.update(1)
             global_step += 1
 
-            # Log training metrics
             logs = {
                 "loss": loss.detach().item(),
                 "lr": lr_scheduler.get_last_lr()[0],
@@ -376,29 +405,24 @@ def main(args):
             accelerator.log(logs, step=global_step)
             
             if accelerator.is_main_process:
-                if (global_step in args.save_model_steps # whether to save our model
-                        or global_step in args.save_images_steps # whether to save sample images
-                        or epoch == args.num_epochs - 1 # whether we've reached max epochs
-                        or global_step >= args.max_training_num_steps): # whether we've reached max steps
+                if (global_step in args.save_model_steps
+                        or global_step in args.save_images_steps
+                        or epoch == args.num_epochs - 1
+                        or global_step >= args.max_training_num_steps):
                     unet = accelerator.unwrap_model(model)
                     if args.use_ema:
                         ema_model.copy_to(unet.parameters())
-                    pipeline = AudioDiffusionPipeline(
-                        vqvae=vqvae,
-                        unet=unet,
-                        mel=mel,
-                        scheduler=train_noise_scheduler,
-                    )
+                    if args.use_waveform:
+                        torch.save(unet.state_dict(), os.path.join(output_dir, f"unet1dmodel_step_{global_step}.pth"))
+                    else:
+                        pipeline = AudioDiffusionPipeline(
+                            vqvae=vqvae,
+                            unet=unet,
+                            mel=mel,
+                            scheduler=train_noise_scheduler,
+                        )
+                        pipeline.save_pretrained(os.path.join(output_dir, f"model_step_{global_step}"))
 
-                # Save model checkpoint
-                if global_step in args.save_model_steps \
-                    or epoch == args.num_epochs - 1 \
-                    or global_step >= args.max_training_num_steps:
-                    model_filename = f"model_step_{global_step}"  # Change the filename to include the step count
-                    model_save_path = os.path.join(output_dir, model_filename)
-                    pipeline.save_pretrained(model_save_path)
-
-                    # save the model
                     if args.push_to_hub:
                         repo.push_to_hub(
                             commit_message=f"global_step {global_step}",
@@ -406,59 +430,61 @@ def main(args):
                             auto_lfs_prune=True,
                         )
 
-                # Generate sample images for visual inspection
                 if global_step in args.save_images_steps \
                     or global_step >= args.max_training_num_steps:
-                    generator = torch.Generator(
-                        device=clean_images.device).manual_seed(42)
+                    generator = torch.Generator(device=noise.device).manual_seed(42)
 
                     if args.encodings is not None:
                         random.seed(42)
                         encoding = torch.stack(
-                            random.sample(list(encodings.values()),
-                                        args.eval_batch_size)).to(
-                                            clean_images.device)
+                            random.sample(list(encodings.values()), args.eval_batch_size)
+                        ).to(noise.device)
                     else:
                         encoding = None
 
-                    # run pipeline in inference (sample random noise and denoise)
-                    images, (sample_rate, audios) = pipeline(
-                        generator=generator,
-                        batch_size=args.eval_batch_size,
-                        return_dict=False,
-                        encoding=encoding,
-                        steps=args.num_inference_steps
-                    )
-
-                    # denormalize the images and save to tensorboard
-                    images = np.array([
-                        np.frombuffer(image.tobytes(), dtype="uint8").reshape(
-                            (len(image.getbands()), image.height, image.width))
-                        for image in images
-                    ])
-                    # for logging, please view docs here:
-                    # https://pytorch.org/docs/stable/tensorboard.html
-                    accelerator.trackers[0].writer.add_images(
-                        "test_samples", images, global_step)
-                    for _, audio in enumerate(audios):
-                        snd_tensor = audio.reshape(1, -1)
-                        accelerator.trackers[0].writer.add_audio(
-                            f"test_audio_{_}",
-                            normalize(audio),
-                            global_step,
-                            sample_rate=sample_rate,
+                    if args.use_waveform:
+                        noise_shape = (args.eval_batch_size, 1, args.waveform_resolution)
+                        noisy_waveforms = torch.randn(noise_shape, device=accelerator.device)  # Use accelerator.device to ensure correct device
+                        generated_waveforms = denoise_waveforms(unet, noisy_waveforms, args.num_inference_steps, test_noise_scheduler)
+                        
+                        for idx, audio in enumerate(generated_waveforms):
+                            accelerator.trackers[0].writer.add_audio(
+                                f"test_audio_{idx}",
+                                normalize(audio.cpu().numpy()),
+                                global_step,
+                                sample_rate=args.sample_rate,
+                            )
+                    else:
+                        images, (sample_rate, audios) = pipeline(
+                            generator=generator,
+                            batch_size=args.eval_batch_size,
+                            return_dict=False,
+                            encoding=encoding,
+                            steps=args.num_inference_steps
                         )
+
+                        images = np.array([
+                            np.frombuffer(image.tobytes(), dtype="uint8").reshape(
+                                (len(image.getbands()), image.height, image.width))
+                            for image in images
+                        ])
+                        accelerator.trackers[0].writer.add_images(
+                            "test_samples", images, global_step)
+                        for idx, audio in enumerate(audios):
+                            accelerator.trackers[0].writer.add_audio(
+                                f"test_audio_{idx}",
+                                normalize(audio),
+                                global_step,
+                                sample_rate=sample_rate,
+                            )
                 accelerator.wait_for_everyone()
-                
-                # ==============================================
-                # Exit training if max num steps is breached
-                # ==============================================
+
                 if global_step >= args.max_training_num_steps:
-                    accelerator.end_training() 
+                    accelerator.end_training()
                     return
+
             
-        # Log time metrics
-        epoch_end_time = time.time()  # End time for each epoch
+        epoch_end_time = time.time()
         epoch_duration = epoch_end_time - epoch_start_time
         total_training_time = epoch_end_time - total_start_time
         training_time_per_step = epoch_duration / len(train_dataloader) if train_dataloader else 0
@@ -472,10 +498,7 @@ def main(args):
 
         accelerator.wait_for_everyone()
 
-        
-
     accelerator.end_training()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
