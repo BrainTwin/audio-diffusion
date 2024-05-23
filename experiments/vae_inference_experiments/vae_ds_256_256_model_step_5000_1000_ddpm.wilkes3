@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH -J vae_ds_256_256_model_step_5000_1000_ddpm
+#SBATCH -A COMPUTERLAB-SL2-GPU
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --gres=gpu:1
+#SBATCH --time=00:25:00
+#SBATCH --mail-type=ALL
+#SBATCH --output=experiments/vae_inference_experiments/vae_ds_256_256_model_step_5000_1000_ddpm.out
+#SBATCH -p ampere
+
+. /etc/profile.d/modules.sh
+module purge
+module load rhel8/default-amp
+module load miniconda/3
+
+source ~/.bashrc
+conda init bash
+conda activate audiodiff_env
+
+application="accelerate"
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/vae_ds_256_256/model_step_5000 --num_images 1024 --eval_batch_size 64 --num_inference_steps 1000 --scheduler ddpm"
+
+CMD="$application $options"
+workdir="/home/th716/rds/hpc-work/audio-diffusion"
+
+cd $workdir
+echo "Changed directory to `pwd`."
+echo "JobID: $SLURM_JOB_ID"
+echo "Time: `date`"
+echo "Running on master node: `hostname`"
+echo "Current directory: `pwd`"
+
+if [ "$SLURM_JOB_NODELIST" ]; then
+    export NODEFILE=`generate_pbs_nodefile`
+    cat $NODEFILE | uniq > machine.file.$SLURM_JOB_ID
+    echo "Nodes allocated:"
+    echo `cat machine.file.$SLURM_JOB_ID | sed -e 's/\..*$//g'`
+fi
+
+echo "Executing command:"
+echo "$CMD"
+eval $CMD

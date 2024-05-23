@@ -8,10 +8,9 @@ os.makedirs(base_dir, exist_ok=True)
 
 # List of model base paths
 model_configs = [
-    # "ds_64_64", "ds_256_256",
-    # "ssd_64_64", "ssd_256_256",
-    # "mc_64_64", "mc_256_256",
-    "ssd_512_32", "ssd_512_64", "ssd_512_128"
+    "vae_ds_256_256",
+    "vae_ssd_256_256",
+    "vae_mc_256_256"
 ]
 
 base_path = "/home/th716/rds/hpc-work/audio-diffusion/models/{config}/model_step_x"
@@ -41,10 +40,10 @@ for config in model_configs:
             output_path = os.path.join(base_dir, f"{job_name}.out")
             
             # Determine the correct SLURM time based on the config
-            if '64_64' in config:
+            if 'ddpm' in suffix:
                 slurm_time = "00:25:00"
-            elif '256_256' in config:
-                slurm_time = "01:00:00"
+            elif 'ddim' in suffix:
+                slurm_time = "00:15:00"
             else:
                 slurm_time = "00:40:00"  # Default time if needed
             
