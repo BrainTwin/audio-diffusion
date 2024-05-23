@@ -21,7 +21,7 @@
 #! Note that the job submission script will enforce no more than 32 cpus per GPU.
 #SBATCH --gres=gpu:1
 #! How much wallclock time will be required?
-#SBATCH --time=20:00:00
+#SBATCH --time=00:01:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=ALL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -65,9 +65,9 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/drum_samples/mel_spec_256_256 \
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ds_waveform \
-"--use_waveform", "True", \
-"--waveform_resolution", "65536", \
-"--train_data_dir", "/home/th716/rds/hpc-work/audio-diffusion/cache/drum_samples/waveform", \
+--use_waveform True \
+--waveform_resolution 65536 \
+--train_data_dir /home/th716/rds/hpc-work/audio-diffusion/cache/drum_samples/waveform \
 --hop_length 256 \
 --n_fft 1024 \
 --train_batch_size 32 \

@@ -65,9 +65,9 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256 \
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ssd_waveform \
-"--use_waveform", "True", \
-"--waveform_resolution", "65536", \
-"--train_data_dir", "/home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform", \
+--use_waveform True \
+--waveform_resolution 65536 \
+--train_data_dir /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform \
 --hop_length 256 \
 --n_fft 1024 \
 --train_batch_size 32 \
