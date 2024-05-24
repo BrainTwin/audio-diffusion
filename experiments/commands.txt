@@ -60,6 +60,23 @@ nohup python scripts/train_vae.py \
 
 
 =========================================
+COMPUTE HOW MANY FAD SAMPLES evaluation
+python scripts/how_many_samples_for_fad_evaluation.py \
+    --reference_paths cache/spotify_sleep_dataset/waveform cache/fma_pop/waveform cache/musiccaps/waveform \
+    --generated_paths models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_102 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_1024 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_1228 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_1433 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_1638 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_1843 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_204 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_409 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_51 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_614 \
+                      models/ssd_64_64/model_step_40000/samples/audio/sch_ddpm_nisteps_1000_819 \
+    --metric frechet_audio_distance \
+    --model_names clap-laion-audio clap-laion-music vggish
 
 
 =========================================
