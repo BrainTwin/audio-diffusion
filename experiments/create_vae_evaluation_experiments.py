@@ -36,7 +36,7 @@ slurm_template = """#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:15:00
+#SBATCH --time=00:03:00
 #SBATCH --mail-type=ALL
 #SBATCH --output={output_file}
 #SBATCH -p ampere
@@ -98,7 +98,7 @@ for model_name in model_names:
     for checkpoint in checkpoints:
         for sample_path in inference_configs:
             # Determine the dataset based on the model prefix
-            prefix = model_name.split('_')[0]
+            prefix = model_name.split('_')[1]
             dataset_name = model_to_dataset.get(prefix)
             
             job_name = f"base_experiment_{model_name}_{checkpoint}_{sample_path}"

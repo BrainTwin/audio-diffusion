@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:15:00
+#SBATCH --time=00:03:00
 #SBATCH --mail-type=ALL
 #SBATCH --output=experiments/hpc_runs/base_experiment_vae_ssd_256_256_model_step_10000_sch_ddim_nisteps_100.out
 #SBATCH -p ampere
@@ -26,7 +26,7 @@ conda activate audiodiff_env
 
 application="accelerate"
 
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/None/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_256/model_step_10000/samples/audio/sch_ddim_nisteps_100 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_256/model_step_10000/samples/sch_ddim_nisteps_100 --metric frechet_audio_distance --model_names clap-laion-audio clap-laion-music vggish"
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform --generated_path /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_256/model_step_10000/samples/audio/sch_ddim_nisteps_100 --log_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_256/model_step_10000/samples/sch_ddim_nisteps_100 --metric frechet_audio_distance --model_names clap-laion-audio clap-laion-music vggish"
 
 CMD="$application $options"
 
