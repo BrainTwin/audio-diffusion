@@ -386,7 +386,7 @@ def main(args):
 
                     if use_encodings:
                         random.seed(42)
-                        with open('/home/th716/audio-diffusion/cache/spotify_sleep_dataset/encodings.pkl', 'rb') as f:
+                        with open(args.path_to_encodings_pickle, 'rb') as f:
                             encoding = pickle.load(f)
                         encoding = torch.tensor(encoding).to(noise.device)
 
@@ -474,6 +474,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--use_waveform", type=bool, default=False)
     parser.add_argument("--waveform_resolution", type=int, default=65536)
+    
+    parser.add_argument("--path_to_encodings_pickle", type=str, default="/home/th716/audio-diffusion/cache/spotify_sleep_dataset/encodings.pkl")
     
     parser.add_argument("--output_dir", type=str, default="ddpm-model-64")
     parser.add_argument("--overwrite_output_dir", type=bool, default=False)
