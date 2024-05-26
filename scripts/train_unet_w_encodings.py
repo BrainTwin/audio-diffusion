@@ -1,6 +1,7 @@
 # based on https://github.com/huggingface/diffusers/blob/main/examples/train_unconditional.py
 
 import argparse
+import io
 import os
 import pickle
 import random
@@ -17,13 +18,12 @@ from datasets import load_dataset, load_from_disk
 from diffusers import (AutoencoderKL, DDIMScheduler, DDPMScheduler,
                        UNet2DConditionModel, UNet2DModel, UNet1DModel)
 from diffusers.optimization import get_scheduler
-# you might need to deprecate diffusers library!
-# https://github.com/huggingface/diffusers/issues/6463
 from diffusers.pipelines.audio_diffusion import Mel
 from diffusers.training_utils import EMAModel # currently using 0.24.0 diffusers library
 from huggingface_hub import HfFolder, Repository, whoami
 import librosa
 from librosa.util import normalize
+from PIL import Image
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import Dataset, DataLoader
 from tqdm.auto import tqdm
@@ -34,9 +34,10 @@ print(sys.path)
 from audiodiffusion.pipeline_audio_diffusion import AudioDiffusionPipeline
 
 
-# Import statements remain unchanged...
-
 logger = get_logger(__name__)
+
+def load_image_from_bytes(image_bytes):
+    return Image.open(io.BytesIO(image_bytes))
 
 def denoise_waveforms(model, noisy_waveforms, num_inference_steps, scheduler):
     model.eval()
@@ -47,8 +48,6 @@ def denoise_waveforms(model, noisy_waveforms, num_inference_steps, scheduler):
             # Use the scheduler to compute the denoised waveform
             noisy_waveforms = scheduler.step(noise_pred, t, noisy_waveforms).prev_sample
     return noisy_waveforms
-
-
 
 def get_full_repo_name(model_id: str,
                        organization: Optional[str] = None,
@@ -133,24 +132,28 @@ def main(args):
             )
             
         # Determine image resolution
-        resolution = dataset[0]["image"].height, dataset[0]["image"].width
+        image = load_image_from_bytes(dataset[0]["image"]["bytes"])
+        resolution = image.height, image.width
 
         augmentations = Compose([
             ToTensor(),
             Normalize([0.5], [0.5]),
         ])
         
+        use_encodings = True
+        
         def transforms(examples):
-            if args.vae is not None and vqvae.config["in_channels"] == 3:
-                images = [
-                    augmentations(image.convert("RGB"))
-                    for image in examples["image"]
-                ]
-            else:
-                images = [augmentations(image) for image in examples["image"]]
-            if args.encodings is not None:
-                encoding = [encodings[file] for file in examples["audio_file"]]
+            try:
+                images = [augmentations(load_image_from_bytes(image["bytes"])) for image in examples["image"]]
+
+            except TypeError as e:
+                logger.error(f"Expected a dictionary with bytes, but got: {type(image)}. Error: {str(e)}")
+                raise
+
+            if 'encoding' in examples:
+                encoding = [torch.tensor(enc, dtype=torch.float32) for enc in examples['encoding']]
                 return {"input": images, "encoding": encoding}
+            
             return {"input": images}
 
         dataset.set_transform(transforms)
@@ -160,9 +163,6 @@ def main(args):
     else:
         train_dataset = AudioDataset(args.train_data_dir, chunk_length=args.waveform_resolution)
         train_dataloader = DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
-
-    if args.encodings is not None:
-        encodings = pickle.load(open(args.encodings, "rb"))
 
     vqvae = None
     if args.vae is not None:
@@ -184,80 +184,28 @@ def main(args):
         if hasattr(pipeline, "vqvae"):
             vqvae = pipeline.vqvae
     else:
-        if args.encodings is None:
-            if args.use_waveform:
-                model = UNet1DModel(
-                    sample_size=args.waveform_resolution,  # Example sample size, adjust as needed
-                    in_channels=1,  # Mono audio input
-                    out_channels=1,  # Mono audio output
-                    layers_per_block=2,
-                    block_out_channels=(128, 128, 256, 256, 512, 512),
-                    down_block_types=(
-                        "DownBlock1D",
-                        "DownBlock1D",
-                        "DownBlock1D",
-                        "DownBlock1D",
-                        "AttnDownBlock1D",
-                        "DownBlock1D",
-                    ),
-                    up_block_types=(
-                        "UpBlock1D",
-                        "AttnUpBlock1D",
-                        "UpBlock1D",
-                        "UpBlock1D",
-                        "UpBlock1D",
-                        "UpBlock1D",
-                    ),
-                )
-            else:
-                model = UNet2DModel(
-                    sample_size=resolution if vqvae is None else latent_resolution,
-                    in_channels=1
-                    if vqvae is None else vqvae.config["latent_channels"],
-                    out_channels=1
-                    if vqvae is None else vqvae.config["latent_channels"],
-                    layers_per_block=2,
-                    block_out_channels=(128, 128, 256, 256, 512, 512),
-                    down_block_types=(
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "AttnDownBlock2D",
-                        "DownBlock2D",
-                    ),
-                    up_block_types=(
-                        "UpBlock2D",
-                        "AttnUpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                    ),
-                )
-        else:
-            model = UNet2DConditionModel(
-                sample_size=resolution if vqvae is None else latent_resolution,
-                in_channels=1
-                if vqvae is None else vqvae.config["latent_channels"],
-                out_channels=1
-                if vqvae is None else vqvae.config["latent_channels"],
-                layers_per_block=2,
-                block_out_channels=(128, 256, 512, 512),
-                down_block_types=(
-                    "CrossAttnDownBlock2D",
-                    "CrossAttnDownBlock2D",
-                    "CrossAttnDownBlock2D",
-                    "DownBlock2D",
-                ),
-                up_block_types=(
-                    "UpBlock2D",
-                    "CrossAttnUpBlock2D",
-                    "CrossAttnUpBlock2D",
-                    "CrossAttnUpBlock2D",
-                ),
-                cross_attention_dim=list(encodings.values())[0].shape[-1],
-            )
+        model = UNet2DConditionModel(
+            sample_size=resolution if vqvae is None else latent_resolution,
+            in_channels=1
+            if vqvae is None else vqvae.config["latent_channels"],
+            out_channels=1
+            if vqvae is None else vqvae.config["latent_channels"],
+            layers_per_block=2,
+            block_out_channels=(128, 256, 512, 512),
+            down_block_types=(
+                "CrossAttnDownBlock2D",
+                "CrossAttnDownBlock2D",
+                "CrossAttnDownBlock2D",
+                "DownBlock2D",
+            ),
+            up_block_types=(
+                "UpBlock2D",
+                "CrossAttnUpBlock2D",
+                "CrossAttnUpBlock2D",
+                "CrossAttnUpBlock2D",
+            ),
+            cross_attention_dim=512 if use_encodings else None,
+        )
 
     # Initialize schedulers
     if args.train_scheduler == "ddpm":
@@ -372,12 +320,16 @@ def main(args):
             noisy_waveforms = train_noise_scheduler.add_noise(clean_waveforms, noise, timesteps) if clean_waveforms is not None else None
 
             with accelerator.accumulate(model):
-                if args.encodings is not None:
-                    noise_pred = model(noisy_images, timesteps,
-                                       batch["encoding"])["sample"]
+                if use_encodings:
+                    encodings = batch["encoding"]
+                    # Move encodings to the correct device
+                    encodings = encodings.to(noise.device)
+                    if len(encodings.shape) == 2:
+                        encodings = encodings.unsqueeze(1)  # Add sequence_length dimension
+                    noise_pred = model(noisy_images, timesteps, encodings)
                 else:
-                    noise_pred = model(noisy_images if noisy_images is not None else noisy_waveforms, timesteps)["sample"]
-                loss = F.mse_loss(noise_pred, noise)
+                    noise_pred = model(noisy_images if noisy_images is not None else noisy_waveforms, timesteps)
+                loss = F.mse_loss(noise_pred["sample"], noise)
                 accelerator.backward(loss)
 
                 if accelerator.sync_gradients:
@@ -387,6 +339,7 @@ def main(args):
                 if args.use_ema:
                     ema_model.step(model)
                 optimizer.zero_grad()
+
 
             progress_bar.update(1)
             global_step += 1
@@ -431,11 +384,21 @@ def main(args):
                     or global_step >= args.max_training_num_steps:
                     generator = torch.Generator(device=noise.device).manual_seed(42)
 
-                    if args.encodings is not None:
+                    if use_encodings:
                         random.seed(42)
-                        encoding = torch.stack(
-                            random.sample(list(encodings.values()), args.eval_batch_size)
-                        ).to(noise.device)
+                        with open('/home/th716/audio-diffusion/cache/spotify_sleep_dataset/encodings.pkl', 'rb') as f:
+                            encoding = pickle.load(f)
+                        encoding = torch.tensor(encoding).to(noise.device)
+
+                        # Adjust the encoding tensor based on eval_batch_size
+                        if args.eval_batch_size < encoding.shape[0]:
+                            encoding = encoding[:args.eval_batch_size]
+                        elif args.eval_batch_size > encoding.shape[0]:
+                            repeats = args.eval_batch_size // encoding.shape[0]
+                            remainder = args.eval_batch_size % encoding.shape[0]
+                            encoding = encoding.repeat(repeats, 1, 1)
+                            if remainder > 0:
+                                encoding = torch.cat((encoding, encoding[:remainder]), dim=0)
                     else:
                         encoding = None
 
@@ -564,13 +527,6 @@ if __name__ == "__main__":
         default=None,
         help="pretrained VAE model for latent diffusion",
     )
-    parser.add_argument(
-        "--encodings",
-        type=str,
-        default=None,
-        help="picked dictionary mapping audio_file to encoding",
-    )
-
     args = parser.parse_args()
     
     print(args)
