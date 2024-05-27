@@ -12,3 +12,5 @@ taming
 checkpoints
 Pipfile
 Pipfile.lock
+
+results/plots/
