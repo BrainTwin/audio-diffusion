@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J ssd_1024_128_model_step_40000_1000_ddim
+#SBATCH -J ssd_1024_128_model_step_40000_100_ddim
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=01:30:00
 #SBATCH --mail-type=ALL
-#SBATCH --output=experiments/long_inference_experiments/ssd_1024_128_model_step_40000_1000_ddim.out
+#SBATCH --output=experiments/long_inference_experiments/ssd_1024_128_model_step_40000_100_ddim.out
 #SBATCH -p ampere
 
 . /etc/profile.d/modules.sh
