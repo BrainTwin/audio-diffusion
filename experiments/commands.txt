@@ -26,11 +26,11 @@ scripts/train_unet.py \
 GENERATE MEL SPECTROGRAMS FROM AUDIO AND SAVE TO File
 
 python scripts/audio_to_images.py \
---resolution 1024,128 \
+--resolution 2048,256 \
 --hop_length 256 \
 --n_fft 1024 \
 --input_dir cache/spotify_sleep_dataset/waveform \
---output_dir cache/spotify_sleep_dataset/waveform/mel_spec_1024_128
+--output_dir cache/spotify_sleep_dataset/waveform/mel_spec_2024_256
 
 
 =========================================
