@@ -34,9 +34,27 @@ print(sys.path)
 from audiodiffusion.pipeline_audio_diffusion import AudioDiffusionPipeline
 
 
-# Import statements remain unchanged...
+
 
 logger = get_logger(__name__)
+
+def get_model_size(model):
+    param_size = 0
+    param_count = 0
+    for param in model.parameters():
+        param_size += param.numel() * param.element_size()
+        param_count += param.numel()
+    buffer_size = 0
+    buffer_count = 0
+    for buffer in model.buffers():
+        buffer_size += buffer.numel() * buffer.element_size()
+        buffer_count += buffer.numel()
+    total_size = param_size + buffer_size
+    print(f"Model parameter count: {param_count}")
+    print(f"Model buffer count: {buffer_count}")
+    print(f"Model total count: {param_count + buffer_count}")
+    print(f"Model size (in bytes): {total_size}")
+    return total_size, param_count + buffer_count
 
 def denoise_waveforms(model, noisy_waveforms, num_inference_steps, scheduler):
     model.eval()
@@ -168,8 +186,14 @@ def main(args):
     if args.vae is not None:
         try:
             vqvae = AutoencoderKL.from_pretrained(args.vae)
+            
         except EnvironmentError:
             vqvae = AudioDiffusionPipeline.from_pretrained(args.vae).vqvae
+        
+        vae_model_size, vae_total_params = get_model_size(vqvae)
+        print(f"VAE model size (in bytes): {vae_model_size}")
+        print(f"VAE total number of parameters: {vae_total_params}")
+        
         # Determine latent resolution
         with torch.no_grad():
             latent_resolution = vqvae.encode(
@@ -210,31 +234,61 @@ def main(args):
                     ),
                 )
             else:
-                model = UNet2DModel(
-                    sample_size=resolution if vqvae is None else latent_resolution,
-                    in_channels=1
-                    if vqvae is None else vqvae.config["latent_channels"],
-                    out_channels=1
-                    if vqvae is None else vqvae.config["latent_channels"],
-                    layers_per_block=2,
-                    block_out_channels=(128, 128, 256, 256, 512, 512),
-                    down_block_types=(
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "DownBlock2D",
-                        "AttnDownBlock2D",
-                        "DownBlock2D",
-                    ),
-                    up_block_types=(
-                        "UpBlock2D",
-                        "AttnUpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                        "UpBlock2D",
-                    ),
-                )
+                if args.model_size == 'large':
+                    model = UNet2DModel(
+                        sample_size=resolution if vqvae is None else latent_resolution,
+                        in_channels=1
+                        if vqvae is None else vqvae.config["latent_channels"],
+                        out_channels=1
+                        if vqvae is None else vqvae.config["latent_channels"],
+                        layers_per_block=2,
+                        block_out_channels=(128, 128, 256, 256, 512, 512, 1024),
+                        down_block_types=(
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "AttnDownBlock2D",
+                            "DownBlock2D",
+                        ),
+                        up_block_types=(
+                            "UpBlock2D",
+                            "AttnUpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                        ),
+                    )
+                    
+                elif args.model_size == 'small':
+                    model = UNet2DModel(
+                        sample_size=resolution if vqvae is None else latent_resolution,
+                        in_channels=1
+                        if vqvae is None else vqvae.config["latent_channels"],
+                        out_channels=1
+                        if vqvae is None else vqvae.config["latent_channels"],
+                        layers_per_block=2,
+                        block_out_channels=(128, 128, 256, 256, 512, 512),
+                        down_block_types=(
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "AttnDownBlock2D",
+                            "DownBlock2D",
+                        ),
+                        up_block_types=(
+                            "UpBlock2D",
+                            "AttnUpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D",
+                        ),
+                    )
         else:
             model = UNet2DConditionModel(
                 sample_size=resolution if vqvae is None else latent_resolution,
@@ -258,6 +312,11 @@ def main(args):
                 ),
                 cross_attention_dim=list(encodings.values())[0].shape[-1],
             )
+            
+    # Print model size and parameter count
+    model_size, total_params = get_model_size(model)
+    print(f"Model size (in bytes): {model_size}")
+    print(f"Total number of parameters: {total_params}")
 
     # Initialize schedulers
     if args.train_scheduler == "ddpm":
@@ -511,6 +570,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--use_waveform", type=bool, default=False)
     parser.add_argument("--waveform_resolution", type=int, default=65536)
+    parser.add_argument("--model_size", type=str, default='small')
     
     parser.add_argument("--output_dir", type=str, default="ddpm-model-64")
     parser.add_argument("--overwrite_output_dir", type=bool, default=False)
