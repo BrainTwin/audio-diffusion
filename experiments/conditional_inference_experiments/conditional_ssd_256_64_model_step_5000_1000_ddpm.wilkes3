@@ -19,7 +19,7 @@ conda init bash
 conda activate audiodiff_env
 
 application="accelerate"
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/ssd_256_64/model_step_5000 --num_images 256 --eval_batch_size 32 --num_inference_steps 1000 --scheduler ddpm"
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/conditional_ssd_256_64/model_step_5000 --num_images 256 --eval_batch_size 32 --num_inference_steps 1000 --scheduler ddpm"
 
 CMD="$application $options"
 workdir="/home/th716/rds/hpc-work/audio-diffusion"

@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J ssd_256_64_model_step_5000_1000_ddpm
+#SBATCH -J conditional_ssd_256_64_model_step_5000_100_ddim
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=06:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --output=experiments/base_inference_experiments/ssd_256_64_model_step_5000_1000_ddpm.out
+#SBATCH --output=experiments/conditional_inference_experiments/conditional_ssd_256_64_model_step_5000_100_ddim.out
 #SBATCH -p ampere
 
 . /etc/profile.d/modules.sh
@@ -19,7 +19,7 @@ conda init bash
 conda activate audiodiff_env
 
 application="accelerate"
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/ssd_256_64/model_step_5000 --num_images 256 --eval_batch_size 32 --num_inference_steps 100 --scheduler ddim"
+options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/conditional_ssd_256_64/model_step_5000 --num_images 256 --eval_batch_size 32 --num_inference_steps 100 --scheduler ddim"
 
 CMD="$application $options"
 workdir="/home/th716/rds/hpc-work/audio-diffusion"
