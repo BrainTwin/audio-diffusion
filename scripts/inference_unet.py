@@ -36,7 +36,11 @@ def main(args):
     if args.encodings is not None:
         with open(args.encodings, "rb") as f:
             encodings = pickle.load(f)
-        encodings = {k: torch.tensor(v).to(accelerator.device) for k, v in encodings.items()}
+        if isinstance(encodings, dict):
+            encodings = {k: torch.tensor(v).to(accelerator.device) for k, v in encodings.items()}
+        else:
+            # Handle the case where encodings is not a dictionary
+            encodings = torch.tensor(encodings).to(accelerator.device)
      
     # Prepare the model for generation
     model = pipeline.unet
@@ -55,7 +59,10 @@ def main(args):
             # If encodings are used, sample them according to the batch size
             encoding_sample = None
             if encodings is not None:
-                encoding_sample = torch.stack(list(encodings.values())[:batch_size])
+                if isinstance(encodings, dict):
+                    encoding_sample = torch.stack(list(encodings.values())[:batch_size])
+                else:
+                    encoding_sample = encodings[:batch_size]
             
             images, (sample_rate, audios) = pipeline(
                 generator=generator, 
