@@ -3,6 +3,7 @@ import os
 import torch
 from pathlib import Path
 import time
+import pickle
 import torchaudio
 from torchvision.utils import save_image
 from tqdm import tqdm
@@ -29,34 +30,14 @@ def main(args):
     mel = pipeline.mel
     model = pipeline.unet
     vqvae = accelerator.prepare(pipeline.vqvae) if hasattr(pipeline, "vqvae") else None
-    encodings = accelerator.prepare(pipeline.encodings) if hasattr(pipeline, "encodings") else None
     
-    
-    # if args.scheduler == "ddpm":
-    #     scheduler = DDPMScheduler(
-    #         num_train_timesteps=args.num_inference_steps)
-        
-    # else:
-    #     scheduler = DDIMScheduler(
-    #         num_train_timesteps=args.num_inference_steps) 
-        
-    # # Load VAE model if specified
-    # vae = None
-    # if args.vae:
-    #     vae = AutoencoderKL.from_pretrained(args.vae)
-
-    # # Load encodings if specified
-    # encodings = None
-    # if args.encodings:
-    #     encodings = torch.load(args.encodings)
-
-    # # Load the pretrained model with scheduler and potentially VAE
-    # pipeline = AudioDiffusionPipeline.from_pretrained(
-    #     model_path,
-    #     scheduler=scheduler,
-    #     vqvae=vae  # Pass the VAE if loaded
-    # )
-    
+    # Load encodings if provided
+    encodings = None
+    if args.encodings is not None:
+        with open(args.encodings, "rb") as f:
+            encodings = pickle.load(f)
+        encodings = {k: torch.tensor(v).to(accelerator.device) for k, v in encodings.items()}
+     
     # Prepare the model for generation
     model = pipeline.unet
     model = accelerator.prepare(model)
@@ -74,14 +55,15 @@ def main(args):
             # If encodings are used, sample them according to the batch size
             encoding_sample = None
             if encodings is not None:
-                encoding_sample = encodings[:batch_size]
+                encoding_sample = torch.stack(list(encodings.values())[:batch_size])
             
             images, (sample_rate, audios) = pipeline(
                 generator=generator, 
                 batch_size=batch_size,
                 return_dict=False, 
                 steps=args.num_inference_steps,
-                encoding=encoding_sample  # Pass encodings if available
+                encoding=encoding_sample, 
+                eta=0 if args.scheduler == 'ddpm' else 1
             )
 
         for i in range(batch_size):
@@ -110,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument("--eval_batch_size", type=int, default=32)
     parser.add_argument("--scheduler", type=str, default='ddim', choices=['ddim', 'ddpm'])
     parser.add_argument("--vae", type=str, default=None, help="Path to a pretrained VAE model.")
-    parser.add_argument("--encodings", type=str, default=None, help="Path to tensor file containing encodings.")
+    parser.add_argument("--encodings", type=str, default=None, help="Path to pickle file containing encodings.")
 
     args = parser.parse_args()
     main(args)
