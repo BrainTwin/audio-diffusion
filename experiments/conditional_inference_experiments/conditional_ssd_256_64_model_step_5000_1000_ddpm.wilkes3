@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J ssd_256_64_model_step_5000_1000_ddpm
+#SBATCH -J conditional_ssd_256_64_model_step_5000_1000_ddpm
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=06:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --output=experiments/base_inference_experiments/ssd_256_64_model_step_5000_1000_ddpm.out
+#SBATCH --output=experiments/conditional_inference_experiments/conditional_ssd_256_64_model_step_5000_1000_ddpm.out
 #SBATCH -p ampere
 
 . /etc/profile.d/modules.sh
