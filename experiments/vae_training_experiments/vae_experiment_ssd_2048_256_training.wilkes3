@@ -62,7 +62,7 @@ application="accelerate"
 
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
-${workspaceFolder}/scripts/train_vae.py \
+/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_2048_256 \
 --batch_size 32 \
 --gradient_accumulation_steps 1 \
