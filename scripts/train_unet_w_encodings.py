@@ -211,7 +211,7 @@ def main(args):
                     "UpBlock2D",
                     "UpBlock2D",
                 ),
-                cross_attention_dim=list(encodings.values())[0].shape[-1],
+                cross_attention_dim=list(dataset['encoding'].values())[0].shape[-1],
             )
         elif args.model_size == 'small':
             model = UNet2DConditionModel(
@@ -238,7 +238,7 @@ def main(args):
                     "UpBlock2D",
                     "UpBlock2D",
                 ),
-                cross_attention_dim=list(encodings.values())[0].shape[-1],
+                cross_attention_dim=list(dataset['encoding'].values())[0].shape[-1],
             ) 
 
     # Initialize schedulers
