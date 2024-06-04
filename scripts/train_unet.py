@@ -290,28 +290,62 @@ def main(args):
                         ),
                     )
         else:
-            model = UNet2DConditionModel(
-                sample_size=resolution if vqvae is None else latent_resolution,
-                in_channels=1
-                if vqvae is None else vqvae.config["latent_channels"],
-                out_channels=1
-                if vqvae is None else vqvae.config["latent_channels"],
-                layers_per_block=2,
-                block_out_channels=(128, 256, 512, 512),
-                down_block_types=(
-                    "CrossAttnDownBlock2D",
-                    "CrossAttnDownBlock2D",
-                    "CrossAttnDownBlock2D",
-                    "DownBlock2D",
-                ),
-                up_block_types=(
-                    "UpBlock2D",
-                    "CrossAttnUpBlock2D",
-                    "CrossAttnUpBlock2D",
-                    "CrossAttnUpBlock2D",
-                ),
-                cross_attention_dim=list(encodings.values())[0].shape[-1],
-            )
+            if args.model_size == 'large':
+                model = UNet2DConditionModel(
+                    sample_size=resolution if vqvae is None else latent_resolution,
+                    in_channels=1
+                    if vqvae is None else vqvae.config["latent_channels"],
+                    out_channels=1
+                    if vqvae is None else vqvae.config["latent_channels"],
+                    layers_per_block=2,
+                    block_out_channels=(128, 256, 256, 512, 512, 512, 1024),
+                    down_block_types=(
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "CrossAttnDownBlock2D",
+                        "CrossAttnDownBlock2D",
+                        "DownBlock2D",
+                    ),
+                    up_block_types=(
+                        "UpBlock2D",
+                        "CrossAttnUpBlock2D",
+                        "CrossAttnUpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                    ),
+                    cross_attention_dim=list(encodings.values())[0].shape[-1],
+                )
+            elif args.model_size == 'small':
+                model = UNet2DConditionModel(
+                    sample_size=resolution if vqvae is None else latent_resolution,
+                    in_channels=1
+                    if vqvae is None else vqvae.config["latent_channels"],
+                    out_channels=1
+                    if vqvae is None else vqvae.config["latent_channels"],
+                    layers_per_block=2,
+                    block_out_channels=(128, 256, 256, 256, 512, 512),
+                    down_block_types=(
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "DownBlock2D",
+                        "CrossAttnDownBlock2D",
+                        "DownBlock2D",
+                    ),
+                    up_block_types=(
+                        "UpBlock2D",
+                        "CrossAttnUpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                        "UpBlock2D",
+                    ),
+                    cross_attention_dim=list(encodings.values())[0].shape[-1],
+                ) 
             
     # Print model size and parameter count
     model_size, total_params = get_model_size(model)
