@@ -188,6 +188,7 @@ if __name__ == "__main__":
                 filename="{epoch:06}",
                 verbose=True,
                 save_last=True,
+                exp_name=exp_name,
             ),
         ],
     )
