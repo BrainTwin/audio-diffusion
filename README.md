@@ -1,8 +1,3 @@
-
-# audio-diffusion [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/teticio/audio-diffusion/blob/master/notebooks/gradio_app.ipynb)
-
-## Apply diffusion models to synthesize music instead of images using the new Hugging Face [diffusers](https://github.com/huggingface/diffusers) package
-
 Timo Hromadka MPhil Project.
 
 This repository builds on the repository by Robert Dargawel Smith (https://github.com/teticio/audio-diffusion).
