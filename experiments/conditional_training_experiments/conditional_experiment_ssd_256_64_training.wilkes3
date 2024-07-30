@@ -21,7 +21,7 @@
 #! Note that the job submission script will enforce no more than 32 cpus per GPU.
 #SBATCH --gres=gpu:1
 #! How much wallclock time will be required?
-#SBATCH --time=20:00:00
+#SBATCH --time=30:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=ALL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -68,20 +68,21 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --hop_length 256 \
 --n_fft 1024 \
 --train_batch_size 32 \
---eval_batch_size 32 \
+--eval_batch_size 16 \
 --num_epochs 1000000 \
---max_training_num_steps 40000 \
+--max_training_num_steps 400000 \
 --gradient_accumulation_steps 1 \
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 100 500 1000 2500 5000 10000 20000 40000 \
---save_images_steps 100 500 1000 2500 5000 10000 20000 40000 \
+--save_model_steps 5000 10000 15000 20000 25000 30000 35000 40000 45000 50000 55000 60000 65000 70000 75000 80000 \
+--save_images_steps 10000 20000 30000 40000 50000 60000 70000 80000 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
 --train_scheduler ddpm \
 --test_scheduler ddpm \
---path_to_encodings_pickle /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/encodings.pkl"
+--model_size small \
+--path_to_encodings_pickle /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/encodings_512.pkl"
 
 CMD="$application $options"
 
