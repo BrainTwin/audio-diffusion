@@ -70,12 +70,12 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --train_batch_size 16 \
 --eval_batch_size 16 \
 --num_epochs 1000000 \
---max_training_num_steps 200000 \
+--max_training_num_steps 100000 \
 --gradient_accumulation_steps 1 \
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 50000 100000 150000 200000 \
+--save_model_steps 10000 20000 30000 40000 50000 60000 70000 80000 90000 100000 \
 --save_images_steps 100 1000 2500 5000 10000 25000 50000 100000 150000 200000 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
