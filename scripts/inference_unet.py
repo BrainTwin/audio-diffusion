@@ -29,7 +29,7 @@ def main(args):
     pipeline = AudioDiffusionPipeline.from_pretrained(model_path)
     original_mel = pipeline.mel
     mel = Mel(
-        x_res=original_mel.x_res
+        x_res=original_mel.x_res,
         y_res=original_mel.y_res,
         hop_length=256,
         sample_rate=22050,
