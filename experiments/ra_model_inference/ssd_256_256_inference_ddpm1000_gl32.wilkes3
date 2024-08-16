@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH -J ds_64_64_model_step_100_100_ddim
+#SBATCH -J yres
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=00:25:00
+#SBATCH --time=10:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --output=experiments/base_inference_experiments/ra_ssd_256_256_ms50000.out
 #SBATCH -p ampere
@@ -23,7 +23,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py \
 --pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/ra_ssd_256_256/model_step_50000 \
 --num_images 1024 \
---eval_batch_size 64 \
+--eval_batch_size 32 \
 --num_inference_steps 1000 \
 --scheduler ddpm"
 
