@@ -9,7 +9,7 @@ from torchvision.utils import save_image
 from tqdm import tqdm
 from diffusers import AudioDiffusionPipeline
 from diffusers import (AutoencoderKL, DDIMScheduler, DDPMScheduler,
-                       UNet2DConditionModel, UNet2DModel)
+                       UNet2DConditionModel, UNet2DModel, Mel)
 from accelerate import Accelerator
 
 def main(args):
@@ -27,7 +27,15 @@ def main(args):
     generator = torch.Generator(device='cuda').manual_seed(args.seed)
     
     pipeline = AudioDiffusionPipeline.from_pretrained(model_path)
-    mel = pipeline.mel
+    original_mel = pipeline.mel
+    mel = Mel(
+        x_res=original_mel.x_res
+        y_res=original_mel.y_res,
+        hop_length=256,
+        sample_rate=22050,
+        n_fft=1024,
+        n_iter=args.n_iter
+    )
     model = pipeline.unet
     vqvae = accelerator.prepare(pipeline.vqvae) if hasattr(pipeline, "vqvae") else None
     
@@ -95,6 +103,7 @@ if __name__ == "__main__":
     parser.add_argument("--pretrained_model_path", type=str, required=True)
     parser.add_argument("--num_images", type=int, default=10)
     parser.add_argument("--num_inference_steps", type=int, default=50)
+    parser.add_argument("--n_iter", type=int, default=32)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--eval_batch_size", type=int, default=32)
     parser.add_argument("--scheduler", type=str, default='ddim', choices=['ddim', 'ddpm'])
