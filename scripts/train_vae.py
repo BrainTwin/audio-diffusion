@@ -18,6 +18,7 @@ from PIL import Image
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.utilities.distributed import rank_zero_only
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader, Dataset
 
 import sys
@@ -111,6 +112,7 @@ class ImageLogger(Callback):
                     global_step=pl_module.global_step,
                     sample_rate=mel.get_sample_rate(),
                 )
+                
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         if (batch_idx + 1) % self.every != 0:
@@ -153,11 +155,24 @@ if __name__ == "__main__":
     parser.add_argument("--save_images_batches", type=int, default=1000)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to load from the dataset")
+    parser.add_argument("--latent_dims", type=str, default="4,4", help="Latent space dimensions, e.g., '4,4' for 4x4 latent space")
+    parser.add_argument("--resolution", type=int, default="256", help="We are assuming that the resolution is square, e.g. NxN.")
+
     args = parser.parse_args()
     
+    # setup config and args
+    latent_dims = tuple(map(int, args.latent_dims.split(',')))
     exp_name = f'd_{args.dataset_name}_'
 
     config = OmegaConf.load(args.ldm_config_file)
+    config.model.params.ddconfig.latent_resolution = latent_dims
+    config.model.params.ddconfig.resolution = args.resolution
+    
+    downsampling_steps = int(np.log2(args.resolution / latent_dims[0]))  # log2 of how much we need to downsample
+    config.model.params.ddconfig.ch_mult = [1] + [2, 2, 4, 4, 4, 8, 8, 8, 8, 16, 16][:downsampling_steps]
+
+
+    # instantiate model and necessary objects    
     model = instantiate_from_config(config.model)
     model.learning_rate = config.model.base_learning_rate
     data = AudioDiffusionDataModule(
@@ -170,10 +185,14 @@ if __name__ == "__main__":
     trainer_config = lightning_config.get("trainer", OmegaConf.create())
     trainer_config.accumulate_grad_batches = args.gradient_accumulation_steps
     trainer_opt = argparse.Namespace(**trainer_config)
+    
+    tb_logger = TensorBoardLogger(save_dir=args.ldm_checkpoint_dir, name='tensorboard_logs')
+    
     trainer = Trainer.from_argparse_args(
         trainer_opt,
         max_epochs=args.max_epochs,
         resume_from_checkpoint=args.resume_from_checkpoint,
+        logger=tb_logger,
         callbacks=[
             ImageLogger(
                 every=args.save_images_batches,
