@@ -58,10 +58,10 @@ source ~/.bashrc
 conda init bash
 conda activate audiodiff_env              # Activate your Conda environment
 
-application="accelerate"
+application="python"
 
 #! Run options for the application:
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
+options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256 \
 --batch_size 16 \
 --ldm_config_file /home/th716/rds/hpc-work/audio-diffusion/config/ldm_autoencoder_kl.yaml \
