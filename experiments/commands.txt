@@ -25,12 +25,14 @@ scripts/train_unet.py \
 =========================================
 GENERATE MEL SPECTROGRAMS FROM AUDIO AND SAVE TO File
 
-python scripts/audio_to_images.py \
---resolution 2048,256 \
+nohup python scripts/audio_to_images.py \
+--resolution 2048,128 \
 --hop_length 256 \
 --n_fft 1024 \
 --input_dir cache/spotify_sleep_dataset/waveform \
---output_dir cache/spotify_sleep_dataset/waveform/mel_spec_2024_256
+--output_dir cache/spotify_sleep_dataset/waveform/mel_spec_2024_128 \
+> logs/mel_spec_2048_128_conversion.log 2>&1 &
+
 
 
 =========================================
@@ -60,6 +62,8 @@ nohup python scripts/train_vae.py \
 
 
 =========================================
+#conda version 1.23.5
+
 COMPUTE HOW MANY FAD SAMPLES evaluation
 python scripts/how_many_samples_for_fad_evaluation.py \
     --reference_paths cache/spotify_sleep_dataset/waveform cache/fma_pop/waveform cache/musiccaps/waveform \
