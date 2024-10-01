@@ -53,12 +53,19 @@ module purge                               # Removes all modules still loaded
 module load rhel8/default-amp               # REQUIRED - loads the basic environment
 module load miniconda/3                      # Load Anaconda for Conda support, adjust as necessary
 
-source ~/.bashrc  
-
 conda init bash
-conda activate audiodiff_env              # Activate your Conda environment
+#! source /usr/local/software/master/miniconda/3/etc/profile.d/conda.sh
+source ~/.conda/envs/audiodiff_env_new/bin/activate
+#! conda init audiodiff_env_new
+conda activate audiodiff_env_new
+   
+# Activate your Conda environment
+echo "Active conda environment: $(conda info --envs | grep '*' | awk '{print $1}')"
+echo "Python version: $(python --version)"
+echo "Python executable location: $(which python)"
 
-application="python"
+application="~/.conda/envs/audiodiff_env_new/bin/python"
+#! application="python"
 
 #! Run options for the application:
 options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
@@ -67,15 +74,14 @@ options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --ldm_config_file /home/th716/rds/hpc-work/audio-diffusion/config/ldm_autoencoder_kl.yaml \
 --ldm_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/ldm_vae_ssd_256_to_16 \
 --hf_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_to_16 \
---resume_from_checkpoint None \
 --gradient_accumulation_steps 1 \
 --hop_length 256 \
 --sample_rate 22050 \
 --n_fft 1024 \
 --save_images_batches 1000 \
 --max_epochs 100 \
---max_samples None \
 --resolution 256 \
+--model_size medium \
 --latent_dims 16,16"
 
 CMD="$application $options"
