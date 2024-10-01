@@ -62,7 +62,7 @@ nohup python scripts/train_vae.py \
 
 
 =========================================
-#conda version 1.23.5
+#numpy version 1.23.5
 
 COMPUTE HOW MANY FAD SAMPLES evaluation
 python scripts/how_many_samples_for_fad_evaluation.py \

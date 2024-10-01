@@ -9,15 +9,15 @@ import pytorch_lightning as pl
 # if getting the error: cannot import name '_compare_version' from 'torchmetrics.utilities.imports' 
 # use this fix: https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/11648
 import torch
-print(torch.version.cuda)
-print(torch.cuda.is_available())
+print(f'torch cuda version is: {torch.version.cuda}')
+print(f'torch cuda availability is: {torch.cuda.is_available()}')
 import torchvision
 from datasets import load_dataset, load_from_disk
 from diffusers.pipelines.audio_diffusion import Mel
 from librosa.util import normalize
 from omegaconf import OmegaConf
 from PIL import Image
-from pytorch_lightning.callbacks import Callback, ModelCheckpoint
+from pytorch_lightning.callbacks import Callback, ModelCheckpoint, DeviceStatsMonitor
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.utilities.distributed import rank_zero_only
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -25,6 +25,7 @@ from torch.utils.data import DataLoader, Dataset
 
 # we want this script to first look into the local directory, rather than the installed audiodiffusion library
 sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/')
+sys.path.insert(0, '/home/th716/audio-diffusion/')
 print(f'new sys.path is: {sys.path}')
 from audiodiffusion.utils import convert_ldm_to_hf_vae
 
@@ -144,6 +145,13 @@ class HFModelCheckpoint(ModelCheckpoint):
         convert_ldm_to_hf_vae(ldm_checkpoint, self.ldm_config, self.hf_checkpoint, self.sample_size)
 
 
+def print_gpu_memory():
+    allocated_memory = torch.cuda.memory_allocated()
+    max_allocated_memory = torch.cuda.max_memory_allocated()
+    print(f"Current memory allocated: {allocated_memory / (1024 ** 2):.2f} MB")
+    print(f"Max memory allocated so far: {max_allocated_memory / (1024 ** 2):.2f} MB")
+    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train VAE using ldm.")
     parser.add_argument("-d", "--dataset_name", type=str, default=None)
@@ -161,6 +169,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to load from the dataset")
     parser.add_argument("--latent_dims", type=str, default="4,4", help="Latent space dimensions, e.g., '4,4' for 4x4 latent space")
     parser.add_argument("--resolution", type=int, default="256", help="We are assuming that the resolution is square, e.g. NxN.")
+    parser.add_argument("--model_size", type=str, default="small", help="Determine the amount of channel multipliers across layers.")
 
     args = parser.parse_args()
     
@@ -173,11 +182,26 @@ if __name__ == "__main__":
     config.model.params.ddconfig.resolution = args.resolution
     
     downsampling_steps = int(np.log2(args.resolution / latent_dims[0]))  # log2 of how much we need to downsample
-    config.model.params.ddconfig.ch_mult = [1] + [2, 2, 4, 4, 4, 8, 8, 8, 8, 16, 16][:downsampling_steps]
+    if args.model_size == 'small':
+        ch_multipliers = [2, 2, 4, 4, 4, 8, 8, 8, 8, 16, 16]
+        
+    elif args.model_size == 'medium':
+        ch_multipliers = [2, 2, 4, 4, 8, 8, 16, 16, 32, 32, 64]
+    elif args.model_size == 'large':
+        ch_multipliers = [2, 4, 4, 8, 8, 16, 32, 32, 64, 64, 128]
+        
+        
+    config.model.params.ddconfig.ch_mult = [1] + ch_multipliers[:downsampling_steps]
 
 
     # instantiate model and necessary objects    
+    print('Printing memory usage BEFORE model instantiation')
+    print_gpu_memory()
+    
     model = instantiate_from_config(config.model)
+    print('Printing memory usage AFTER model instantiation')
+    print_gpu_memory()
+    
     model.learning_rate = config.model.base_learning_rate
     data = AudioDiffusionDataModule(
         model_id=args.dataset_name,
@@ -192,6 +216,7 @@ if __name__ == "__main__":
     
     tb_logger = TensorBoardLogger(save_dir=args.ldm_checkpoint_dir, name='tensorboard_logs')
     
+    gpu_stats = DeviceStatsMonitor()
     trainer = Trainer.from_argparse_args(
         trainer_opt,
         max_epochs=args.max_epochs,
@@ -213,6 +238,7 @@ if __name__ == "__main__":
                 save_last=True,
                 exp_name=exp_name,
             ),
+            gpu_stats
         ],
     )
     trainer.fit(model, data)
