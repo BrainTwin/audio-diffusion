@@ -1,5 +1,6 @@
 # based on https://github.com/CompVis/stable-diffusion/blob/main/main.py
-
+import sys
+print(sys.path)
 import argparse
 import os
 
@@ -8,10 +9,11 @@ import pytorch_lightning as pl
 # if getting the error: cannot import name '_compare_version' from 'torchmetrics.utilities.imports' 
 # use this fix: https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/11648
 import torch
+print(torch.version.cuda)
+print(torch.cuda.is_available())
 import torchvision
 from datasets import load_dataset, load_from_disk
 from diffusers.pipelines.audio_diffusion import Mel
-from ldm.util import instantiate_from_config
 from librosa.util import normalize
 from omegaconf import OmegaConf
 from PIL import Image
@@ -21,13 +23,15 @@ from pytorch_lightning.utilities.distributed import rank_zero_only
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader, Dataset
 
-import sys
 # we want this script to first look into the local directory, rather than the installed audiodiffusion library
-sys.path.insert(0, '/home/th716/audio-diffusion/')
-print(sys.path)
+sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/')
+print(f'new sys.path is: {sys.path}')
 from audiodiffusion.utils import convert_ldm_to_hf_vae
 
+sys.path.append('/home/th716/rds/hpc-work/audio-diffusion/stable-diffusion/')
+from ldm.util import instantiate_from_config
 
+print(sys.path)
 
 class AudioDiffusion(Dataset):
     def __init__(self, model_id, channels=3, max_samples=None):
