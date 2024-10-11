@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 
-#! BATCH -J ra_experiment_ssd_16_16
+#! BATCH -J ra_experiment_ssd_32_32
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A COMPUTERLAB-SL2-GPU
 #! How many whole nodes should be allocated?
@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/hpc_runs/ra_experiment_ssd_16_16_training.out  # name of output filename
+#SBATCH --output=experiments/hpc_runs/ra_experiment_ssd_32_32_training.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -64,7 +64,7 @@ application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256 \
---output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ra_ssd_16_16 \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ra_ssd_32_32 \
 --hop_length 256 \
 --n_fft 1024 \
 --train_batch_size 32 \
