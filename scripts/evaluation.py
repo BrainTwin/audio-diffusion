@@ -129,14 +129,14 @@ def get_dataset_name_from_path(path):
 
 
 def main(args):
-    model_url = "https://zenodo.org/record/3987831/files/Cnn14_mAP%3D0.431.pth?download=1"
-    checkpoint_path = "../models/Cnn14_mAP=0.431.pth"
+    # model_url = "https://zenodo.org/record/3987831/files/Cnn14_mAP%3D0.431.pth?download=1"
+    # checkpoint_path = "../models/Cnn14_mAP=0.431.pth"
     
     # if not os.path.exists(checkpoint_path):
     #     print(f"Downloading PANN model from {model_url}...")
     #     download_pann_model(model_url, checkpoint_path)
     
-    pann_model = load_pann_model(checkpoint_path)  # Load PANN model with penultimate layer features
+    # pann_model = load_pann_model(checkpoint_path)  # Load PANN model with penultimate layer features
     
     for reference_path in args.reference_paths:
         print('======================================')
