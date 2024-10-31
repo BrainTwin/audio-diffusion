@@ -1,0 +1,31 @@
+Label,Musical Feature Subset,ARS,SC
+Drum Samples,All 34 musical features,-0.030945242000271104,0.11731353822405237
+Drum Samples,Only articulation and energy features,0.0265931709475238,0.4551722804168766
+Drum Samples,Only MFCC features,0.012511460539237238,0.2139752219122651
+Drum Samples,Only rhythm features,-0.06212285664177403,0.4007543717333041
+Drum Samples,Only spectral rolloff features,0.060714864104460295,0.4310303270495336
+Drum Samples,Only spectral flatness features,0.34265974059582816,0.9192044783768143
+FMA Pop,All 34 musical features,0.012340877489132323,0.11731353822405237
+FMA Pop,Only articulation and energy features,0.07167359500984029,0.4551722804168766
+FMA Pop,Only MFCC features,0.015501401288832019,0.2139752219122651
+FMA Pop,Only rhythm features,-0.003110463838792054,0.4007543717333041
+FMA Pop,Only spectral rolloff features,0.022694696029060213,0.4310303270495336
+FMA Pop,Only spectral flatness features,-0.04393964166663407,0.9192044783768143
+MusicCaps,All 34 musical features,0.023390489708545854,0.11731353822405237
+MusicCaps,Only articulation and energy features,0.054392347910312125,0.4551722804168766
+MusicCaps,Only MFCC features,0.0392997134714175,0.2139752219122651
+MusicCaps,Only rhythm features,0.014668008088818267,0.4007543717333041
+MusicCaps,Only spectral rolloff features,0.03127680206373438,0.4310303270495336
+MusicCaps,Only spectral flatness features,-0.009988719918575632,0.9192044783768143
+Spotify Sleep Dataset,All 34 musical features,0.13616222206251793,0.11731353822405237
+Spotify Sleep Dataset,Only articulation and energy features,-0.030152251610339274,0.4551722804168766
+Spotify Sleep Dataset,Only MFCC features,0.09416916668695416,0.2139752219122651
+Spotify Sleep Dataset,Only rhythm features,-0.031652440860906246,0.4007543717333041
+Spotify Sleep Dataset,Only spectral rolloff features,-0.007788561048290824,0.4310303270495336
+Spotify Sleep Dataset,Only spectral flatness features,-0.04393964166663407,0.9192044783768143
+Spotify Sleep Dataset Generated,All 34 musical features,0.0,0.11731353822405237
+Spotify Sleep Dataset Generated,Only articulation and energy features,0.0,0.4551722804168766
+Spotify Sleep Dataset Generated,Only MFCC features,0.0,0.2139752219122651
+Spotify Sleep Dataset Generated,Only rhythm features,0.0,0.4007543717333041
+Spotify Sleep Dataset Generated,Only spectral rolloff features,0.0,0.4310303270495336
+Spotify Sleep Dataset Generated,Only spectral flatness features,0.0,0.9192044783768143
