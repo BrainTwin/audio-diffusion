@@ -81,7 +81,9 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --num_inference_steps 1000 \
 --train_scheduler ddpm \
 --test_scheduler ddpm \
---model_size small"
+--model_size small \
+
+--vae /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_to_8"
 
 CMD="$application $options"
 
