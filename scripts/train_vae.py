@@ -3,6 +3,7 @@ import sys
 print(sys.path)
 import argparse
 import os
+import inspect
 
 import numpy as np
 import pytorch_lightning as pl
@@ -31,6 +32,8 @@ from audiodiffusion.utils import convert_ldm_to_hf_vae
 
 sys.path.append('/home/th716/rds/hpc-work/audio-diffusion/stable-diffusion/')
 from ldm.util import instantiate_from_config
+ldm_util_path = inspect.getfile(instantiate_from_config)
+print(f"The 'ldm.util' file is located at: {ldm_util_path}")
 
 print(sys.path)
 
@@ -168,20 +171,22 @@ if __name__ == "__main__":
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to load from the dataset")
     parser.add_argument("--latent_dims", type=str, default="4,4", help="Latent space dimensions, e.g., '4,4' for 4x4 latent space")
-    parser.add_argument("--resolution", type=int, default="256", help="We are assuming that the resolution is square, e.g. NxN.")
+    parser.add_argument("--resolution", type=str, default=None, help="We are assuming that the resolution is square, e.g. NxN. Leave as None to have resolution overwritten by image size.")
     parser.add_argument("--model_size", type=str, default="small", help="Determine the amount of channel multipliers across layers.")
 
     args = parser.parse_args()
     
     # setup config and args
     latent_dims = tuple(map(int, args.latent_dims.split(',')))
+    resolution = list(map(int, args.resolution.split(',')))
     exp_name = f'd_{args.dataset_name}_'
 
     config = OmegaConf.load(args.ldm_config_file)
     config.model.params.ddconfig.latent_resolution = latent_dims
-    config.model.params.ddconfig.resolution = args.resolution
+    if args.resolution:
+        config.model.params.ddconfig.resolution = resolution
     
-    downsampling_steps = int(np.log2(args.resolution / latent_dims[0]))  # log2 of how much we need to downsample
+    downsampling_steps = int(np.log2(max(resolution) / max(latent_dims)))  # log2 of how much we need to downsample
     if args.model_size == 'small':
         ch_multipliers = [2, 2, 4, 4, 4, 8, 8, 8, 8, 16, 16]
         
@@ -194,14 +199,8 @@ if __name__ == "__main__":
     config.model.params.ddconfig.ch_mult = [1] + ch_multipliers[:downsampling_steps]
 
 
-    # instantiate model and necessary objects    
-    print('Printing memory usage BEFORE model instantiation')
-    print_gpu_memory()
-    
+    # instantiate model and necessary objects       
     model = instantiate_from_config(config.model)
-    print('Printing memory usage AFTER model instantiation')
-    print_gpu_memory()
-    
     model.learning_rate = config.model.base_learning_rate
     data = AudioDiffusionDataModule(
         model_id=args.dataset_name,

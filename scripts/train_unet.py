@@ -9,6 +9,7 @@ import time
 from typing import Optional
 
 import numpy as np
+import math
 import torch
 import torch.nn.functional as F
 from accelerate import Accelerator
@@ -115,6 +116,26 @@ class AudioDataset(Dataset):
     def __getitem__(self, idx):
         audio_chunk = self.data[idx]
         return torch.tensor(audio_chunk, dtype=torch.float32)
+    
+    
+def get_down_up_blocks_and_channels(latent_x, latent_y):
+    min_resolution = min(latent_x, latent_y)
+    num_blocks = int(math.log(min_resolution, 2)-1)
+    channels = [16, 16, 32, 32, 64, 64, 128, 128, 256, 256, 512, 512, 1024, 1024]
+
+    down_block_types = tuple(
+        "CrossAttnDownBlock2d" if i >= num_blocks - 2 else "DownBlock2d"
+        for i in range(num_blocks)
+    )
+    up_block_types = tuple(
+        "CrossAttnUpBlock2d" if i < 2 else "UpBlock2d"
+        for i in range(num_blocks)
+    )
+    
+    block_out_channels = channels[-num_blocks:]
+
+    return down_block_types, up_block_types, block_out_channels
+    
 
 def main(args):
     output_dir = os.environ.get("SM_MODEL_DIR", None) or args.output_dir
@@ -211,9 +232,9 @@ def main(args):
         if args.encodings is None:
             if args.use_waveform:
                 model = UNet1DModel(
-                    sample_size=args.waveform_resolution,  # Example sample size, adjust as needed
-                    in_channels=1,  # Mono audio input
-                    out_channels=1,  # Mono audio output
+                    sample_size=args.waveform_resolution,
+                    in_channels=1, 
+                    out_channels=1, 
                     layers_per_block=2,
                     block_out_channels=(128, 128, 256, 256, 512, 512),
                     down_block_types=(
