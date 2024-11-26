@@ -33,6 +33,15 @@ nohup python scripts/audio_to_images.py \
 --output_dir cache/spotify_sleep_dataset/waveform/mel_spec_2024_128 \
 > logs/mel_spec_2048_128_conversion.log 2>&1 &
 
+=========================================
+lengthen audios to a target length
+
+nohup python scripts/lengthen_audio.py \
+--input_dir cache/spotify_sleep_dataset/waveform \
+--output_dir cache/spotify_sleep_dataset/waveform_lengthened \
+--target_length 100 \
+> logs/lengthen_audio_to_100.log 2>&1 &
+
 
 
 =========================================

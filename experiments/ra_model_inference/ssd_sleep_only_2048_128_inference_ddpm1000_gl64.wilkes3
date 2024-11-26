@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=10:00:00
+#SBATCH --time=12:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --output=experiments/ra_inference_experiments/ra_ssd_sleep_only_2048_128_ms90000.out
 #SBATCH -p ampere
