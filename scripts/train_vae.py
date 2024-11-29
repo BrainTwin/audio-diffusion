@@ -139,9 +139,7 @@ class HFModelCheckpoint(ModelCheckpoint):
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         # Save checkpoints every `save_every_n_batches`
-        if self.save_every_n_batches and (batch_idx + 1) % self.save_every_n_batches == 0:
-            # Save the checkpoint
-            global_batch_step = trainer.global_step
+        if self.save_every_n_batches and (trainer.global_step/2) % self.save_every_n_batches == 0:
             # save as epoch - it will get overwritten anyways
             checkpoint_path = self._get_metric_interpolated_filepath_name({"epoch": trainer.current_epoch}, trainer)
             trainer.save_checkpoint(checkpoint_path)
