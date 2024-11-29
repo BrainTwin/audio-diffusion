@@ -78,8 +78,9 @@ options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --hop_length 256 \
 --sample_rate 22050 \
 --n_fft 1024 \
---save_images_batches 1000 \
---max_epochs 100 \
+--save_images_batches 2500 \
+--save_every_n_batches 2500 \
+--max_epochs 1000 \
 --resolution 256 \
 --model_size medium \
 --latent_dims 32,32"

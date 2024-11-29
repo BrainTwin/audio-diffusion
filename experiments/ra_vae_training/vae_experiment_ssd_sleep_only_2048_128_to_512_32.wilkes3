@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/vae_training_experiments/hpc_runs/vae_ssd_256_to_64_training.out  # name of output filename
+#SBATCH --output=experiments/vae_training_experiments/hpc_runs/vae_ssd_2048_128_to_512_32_training_sleep_only.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -69,11 +69,11 @@ application="~/.conda/envs/audiodiff_env_new/bin/python"
 
 #! Run options for the application:
 options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
---dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256 \
---batch_size 16 \
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_2048_128_sleep_only \
+--batch_size 8 \
 --ldm_config_file /home/th716/rds/hpc-work/audio-diffusion/config/ldm_autoencoder_kl.yaml \
---ldm_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/ldm_vae_ssd_256_to_64 \
---hf_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_to_64 \
+--ldm_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/ldm_vae_ssd_2048_128_to_512_32_sleep_only \
+--hf_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_2048_128_to_512_32_sleep_only \
 --gradient_accumulation_steps 1 \
 --hop_length 256 \
 --sample_rate 22050 \
@@ -81,9 +81,9 @@ options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --save_images_batches 2500 \
 --save_every_n_batches 2500 \
 --max_epochs 1000 \
---resolution 256 \
+--resolution 2048,128 \
 --model_size medium \
---latent_dims 64,64"
+--latent_dims 512,32"
 
 CMD="$application $options"
 

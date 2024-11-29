@@ -178,7 +178,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample_rate", type=int, default=22050)
     parser.add_argument("--n_fft", type=int, default=1024)
     parser.add_argument("--save_images_batches", type=int, default=1000)
-    parser.add_argument("--save_every_n_batches", type=int, default=500)
+    parser.add_argument("--save_every_n_batches", type=int, default=1000)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to load from the dataset")
     parser.add_argument("--latent_dims", type=str, default="4,4", help="Latent space dimensions, e.g., '4,4' for 4x4 latent space")
