@@ -191,7 +191,7 @@ def create_vae_diffusers_config(original_config):
     up_block_types = ["UpDecoderBlock2D"] * len(block_out_channels)
 
     config = dict(
-        sample_size=tuple(vae_params.resolution),
+        sample_size=tuple(vae_params.resolution) if vae_params.resolution else vae_params.latent_resolution,
         in_channels=vae_params.in_channels,
         out_channels=vae_params.out_ch,
         down_block_types=tuple(down_block_types),
@@ -357,7 +357,7 @@ def convert_ldm_to_hf_vae(ldm_checkpoint, ldm_config, hf_checkpoint, sample_size
     # print("Missing keys:", model_keys - checkpoint_keys)
     # print("Unexpected keys:", checkpoint_keys - model_keys)
 
-
+    vae_config['sample_size'] = vae_config['sample_size'][0] 
     vae = AutoencoderKL(**vae_config)
     vae.load_state_dict(converted_vae_checkpoint)
     vae.save_pretrained(hf_checkpoint)

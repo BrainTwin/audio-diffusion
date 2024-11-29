@@ -129,23 +129,35 @@ class ImageLogger(Callback):
 
 
 class HFModelCheckpoint(ModelCheckpoint):
-    def __init__(self, exp_name, ldm_config, hf_checkpoint, *args, **kwargs):
+    def __init__(self, exp_name, ldm_config, hf_checkpoint, save_every_n_batches=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ldm_config = ldm_config
         self.hf_checkpoint = hf_checkpoint
         self.sample_size = None
-        # Customize the directory path using the experiment name
-        self.dirpath = os.path.join(self.dirpath, exp_name)  # Append the experiment name to the directory path
+        self.save_every_n_batches = save_every_n_batches  # New argument for batch-based saving
+        self.dirpath = os.path.join(self.dirpath, exp_name)  # Customize directory path
 
-    def on_train_batch_start(self, trainer, pl_module, batch, batch_idx):
-        if self.sample_size is None:
-            self.sample_size = list(batch["image"].shape[1:3])
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        # Save checkpoints every `save_every_n_batches`
+        if self.save_every_n_batches and (batch_idx + 1) % self.save_every_n_batches == 0:
+            # Save the checkpoint
+            global_batch_step = trainer.global_step
+            # save as epoch - it will get overwritten anyways
+            checkpoint_path = self._get_metric_interpolated_filepath_name({"epoch": trainer.current_epoch}, trainer)
+            trainer.save_checkpoint(checkpoint_path)
+            print(f"Checkpoint saved at {checkpoint_path}")
+
+            # Perform Hugging Face model conversion
+            self.ldm_config.model.params.ddconfig.resolution = self.sample_size
+            convert_ldm_to_hf_vae(checkpoint_path, self.ldm_config, self.hf_checkpoint, self.sample_size)
 
     def on_train_epoch_end(self, trainer, pl_module):
+        # Retain the original functionality for epoch-end checkpoint saving
         ldm_checkpoint = self._get_metric_interpolated_filepath_name({"epoch": trainer.current_epoch}, trainer)
         super().on_train_epoch_end(trainer, pl_module)
         self.ldm_config.model.params.ddconfig.resolution = self.sample_size
         convert_ldm_to_hf_vae(ldm_checkpoint, self.ldm_config, self.hf_checkpoint, self.sample_size)
+
 
 
 def print_gpu_memory():
@@ -168,6 +180,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample_rate", type=int, default=22050)
     parser.add_argument("--n_fft", type=int, default=1024)
     parser.add_argument("--save_images_batches", type=int, default=1000)
+    parser.add_argument("--save_every_n_batches", type=int, default=500)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_samples", type=int, default=None, help="Maximum number of samples to load from the dataset")
     parser.add_argument("--latent_dims", type=str, default="4,4", help="Latent space dimensions, e.g., '4,4' for 4x4 latent space")
@@ -229,15 +242,17 @@ if __name__ == "__main__":
                 n_fft=args.n_fft,
             ),
             HFModelCheckpoint(
+                exp_name=exp_name,
                 ldm_config=config,
                 hf_checkpoint=args.hf_checkpoint_dir,
                 dirpath=args.ldm_checkpoint_dir,
                 filename="{epoch:06}",
                 verbose=True,
                 save_last=True,
-                exp_name=exp_name,
+                save_every_n_batches=args.save_every_n_batches,  # Use the same batch interval
             ),
             gpu_stats
         ],
     )
+
     trainer.fit(model, data)
