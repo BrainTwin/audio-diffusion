@@ -21,7 +21,7 @@
 #! Note that the job submission script will enforce no more than 32 cpus per GPU.
 #SBATCH --gres=gpu:1
 #! How much wallclock time will be required?
-#SBATCH --time=00:15:00
+#SBATCH --time=12:00:00
 #! What types of email messages do you wish to receive?
 #SBATCH --mail-type=ALL
 #! Uncomment this to prevent the job from being requeued (e.g. if
@@ -70,7 +70,7 @@ application="~/.conda/envs/audiodiff_env_new/bin/python"
 #! Run options for the application:
 options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256 \
---batch_size 16 \
+--batch_size 8 \
 --ldm_config_file /home/th716/rds/hpc-work/audio-diffusion/config/ldm_autoencoder_kl.yaml \
 --ldm_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/ldm_vae_ssd_256_to_128 \
 --hf_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_256_to_128 \
@@ -81,7 +81,7 @@ options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --save_images_batches 2500 \
 --save_every_n_batches 2500 \
 --max_epochs 1000 \
---resolution 256 \
+--resolution 256,256 \
 --model_size medium \
 --latent_dims 128,128"
 
