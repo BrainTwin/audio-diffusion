@@ -70,12 +70,11 @@ application="~/.conda/envs/audiodiff_env_new/bin/python"
 #! Run options for the application:
 options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_8192_256 \
---batch_size 4 \
---gradient_accumulation_steps 2 \
+--batch_size 2 \
+--gradient_accumulation_steps 4 \
 --ldm_config_file /home/th716/rds/hpc-work/audio-diffusion/config/ldm_autoencoder_kl.yaml \
 --ldm_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/ldm_vae_ssd_8192_256_to_1024_32 \
 --hf_checkpoint_dir /home/th716/rds/hpc-work/audio-diffusion/models/vae_ssd_8192_256_to_1024_32 \
---gradient_accumulation_steps 1 \
 --hop_length 256 \
 --sample_rate 22050 \
 --n_fft 1024 \
