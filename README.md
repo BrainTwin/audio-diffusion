@@ -9,3 +9,7 @@ My additions to the repository include:
 - experimentation + hpc integration
 - result analysis
 - creative task experimentation (inpainting, outpainting, music style transfer) with novel models/datasets
+
+## Model Architecture
+
+![Model Architecture](notebooks/images/model_architecture_dec.png)
