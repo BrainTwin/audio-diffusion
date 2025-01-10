@@ -171,30 +171,60 @@ def main(args):
                 split="train",
             )
             
-        # Determine image resolution
-        resolution = dataset[0]["image"].height, dataset[0]["image"].width
+        if args.mel_spec_method == "default":
+            # Determine image resolution
+            resolution = dataset[0]["image"].height, dataset[0]["image"].width
 
-        augmentations = Compose([
-            ToTensor(),
-            Normalize([0.5], [0.5]),
-        ])
+            augmentations = Compose([
+                ToTensor(),
+                Normalize([0.5], [0.5]),
+            ])
+            
+            def transforms(examples):
+                if args.vae is not None and vqvae.config["in_channels"] == 3:
+                    images = [
+                        augmentations(image.convert("RGB"))
+                        for image in examples["image"]
+                    ]
+                else:
+                    images = [augmentations(image) for image in examples["image"]]
+                if args.encodings is not None:
+                    encoding = [encodings[file] for file in examples["audio_file"]]
+                    return {"input": images, "encoding": encoding}
+                return {"input": images}
+
+            dataset.set_transform(transforms)
+            train_dataloader = torch.utils.data.DataLoader(
+                dataset, batch_size=args.train_batch_size, shuffle=True)
+            
+        elif args.mel_spec_method == "bigvgan":
+            # CONTINUE HERE
+            # make sure that the dataset object is being correctly parsed to have a tensor mel field, which is the 'input' from above
+            
+            # Determine image resolution
+            sample_mel = torch.tensor(dataset[0]['mel'])
+            resolution = sample_mel.shape[1], sample_mel.shape[2]
+
+            augmentations = Compose([
+                ToTensor(),
+                # Normalize([0.5], [0.5]),
+            ])
+            
+            def transforms(examples):
+                mels = [torch.tensor(mel) for mel in examples["mel"]]
+                
+                if args.encodings is not None:
+                    encoding = [encodings[file] for file in examples["audio_file"]]
+                    return {"input": mels, "encoding": encoding}
+                return {"input": mels}
+
+            dataset.set_transform(transforms)
+            train_dataloader = torch.utils.data.DataLoader(
+                dataset, batch_size=args.train_batch_size, shuffle=True)
         
-        def transforms(examples):
-            if args.vae is not None and vqvae.config["in_channels"] == 3:
-                images = [
-                    augmentations(image.convert("RGB"))
-                    for image in examples["image"]
-                ]
-            else:
-                images = [augmentations(image) for image in examples["image"]]
-            if args.encodings is not None:
-                encoding = [encodings[file] for file in examples["audio_file"]]
-                return {"input": images, "encoding": encoding}
-            return {"input": images}
-
-        dataset.set_transform(transforms)
-        train_dataloader = torch.utils.data.DataLoader(
-            dataset, batch_size=args.train_batch_size, shuffle=True)
+        else:
+            raise ValueError(f"Invalid mel_spec_method: {args.mel_spec_method}. Please choose either 'default' or 'bigvgan'.")
+        
     # LOAD RAW WAVEFORMS
     else:
         train_dataset = AudioDataset(args.train_data_dir, chunk_length=args.waveform_resolution)
@@ -616,6 +646,7 @@ if __name__ == "__main__":
         description="Simple example of a training script.")
     parser.add_argument("--local_rank", type=int, default=-1)
     parser.add_argument("--dataset_name", type=str, default=None)
+    parser.add_argument("--mel_spec_method", type=str, default='default', choices=['default', 'bigvgan'])
     parser.add_argument("--dataset_config_name", type=str, default=None)
     parser.add_argument(
         "--train_data_dir",
@@ -670,7 +701,7 @@ if __name__ == "__main__":
     parser.add_argument("--from_pretrained", type=str, default=None)
     parser.add_argument("--start_epoch", type=int, default=0)
     parser.add_argument("--num_train_steps", type=int, default=1000)
-    parser.add_argument("--num_inference_steps", type=int, default=5, help="Number of timesteps for inference noise scheduling.")
+    parser.add_argument("--num_inference_steps", type=int, default=1000, help="Number of timesteps for inference noise scheduling.")
     parser.add_argument("--train_scheduler", type=str, default="ddpm", help="ddpm or ddim")
     parser.add_argument("--test_scheduler", type=str, default="ddpm", help="ddpm or ddim")
     parser.add_argument(
