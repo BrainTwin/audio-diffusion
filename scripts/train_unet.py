@@ -171,7 +171,7 @@ def main(args):
                 split="train",
             )
             
-        if args.mel_spec_method == "default":
+        if args.mel_spec_method == "image":
             # Determine image resolution
             resolution = dataset[0]["image"].height, dataset[0]["image"].width
 
@@ -223,7 +223,7 @@ def main(args):
                 dataset, batch_size=args.train_batch_size, shuffle=True)
         
         else:
-            raise ValueError(f"Invalid mel_spec_method: {args.mel_spec_method}. Please choose either 'default' or 'bigvgan'.")
+            raise ValueError(f"Invalid mel_spec_method: {args.mel_spec_method}. Please choose either 'image' or 'bigvgan'.")
         
     # LOAD RAW WAVEFORMS
     else:
@@ -646,7 +646,7 @@ if __name__ == "__main__":
         description="Simple example of a training script.")
     parser.add_argument("--local_rank", type=int, default=-1)
     parser.add_argument("--dataset_name", type=str, default=None)
-    parser.add_argument("--mel_spec_method", type=str, default='default', choices=['default', 'bigvgan'])
+    parser.add_argument("--mel_spec_method", type=str, default='image', choices=['image', 'bigvgan'])
     parser.add_argument("--dataset_config_name", type=str, default=None)
     parser.add_argument(
         "--train_data_dir",

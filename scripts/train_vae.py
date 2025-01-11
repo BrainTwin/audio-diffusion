@@ -38,7 +38,7 @@ print(f"The 'ldm.util' file is located at: {ldm_util_path}")
 print(sys.path)
 
 class AudioDiffusion(Dataset):
-    def __init__(self, model_id, channels=3, max_samples=None):
+    def __init__(self, model_id, channels=1, max_samples=None):
         super().__init__()
         self.channels = channels
         if os.path.exists(model_id):
@@ -47,17 +47,31 @@ class AudioDiffusion(Dataset):
             self.hf_dataset = load_dataset(model_id)["train"]
         if max_samples is not None:
             self.hf_dataset = self.hf_dataset.select(range(min(max_samples, len(self.hf_dataset))))
+        
+        if 'mel' in list(self.hf_dataset.features):
+            self.mel_spec_method = 'bigvgan'
+        else:
+            self.mel_spec_method = 'image'
 
     def __len__(self):
         return len(self.hf_dataset)
 
     def __getitem__(self, idx):
-        image = self.hf_dataset[idx]["image"]
-        if self.channels == 3:
-            image = image.convert("RGB")
-        image = np.frombuffer(image.tobytes(), dtype="uint8").reshape((image.height, image.width, self.channels))
-        image = (image / 255) * 2 - 1
-        return {"image": image}
+        if self.mel_spec_method == 'image':
+            image = self.hf_dataset[idx]["image"]
+            if self.channels == 3:
+                image = image.convert("RGB")
+            # convert to shape (height, width, channels)
+            image = np.frombuffer(image.tobytes(), dtype="uint8").reshape((image.height, image.width, self.channels))
+            image = (image / 255) * 2 - 1
+            return {"image": image}
+        elif self.mel_spec_method == 'bigvgan':
+            mel = torch.tensor(self.hf_dataset[idx]["mel"])
+            # convert to shape (height, width, channels)
+            mel = mel.squeeze(0).unsqueeze(-1)
+            return {"image": mel}
+        else:
+            raise ValueError(f"Invalid mel_spec_method: {args.mel_spec_method}. Please choose either 'image' or 'bigvgan'.")
 
 
 
@@ -168,6 +182,7 @@ def print_gpu_memory():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train VAE using ldm.")
     parser.add_argument("-d", "--dataset_name", type=str, default=None)
+    parser.add_argument("--mel_spec_method", type=str, default='image', choices=['image', 'bigvgan'])
     parser.add_argument("-b", "--batch_size", type=int, default=1)
     parser.add_argument("-c", "--ldm_config_file", type=str, default="config/ldm_autoencoder_kl.yaml")
     parser.add_argument("--ldm_checkpoint_dir", type=str, default="models/ldm-autoencoder-kl")
