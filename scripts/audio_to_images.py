@@ -252,10 +252,10 @@ def create_dataset(args, audio_files):
     """
     examples = []
     
-    # 'default' method as proposed in:
+    # 'image' method as proposed in:
     # https://github.com/teticio/audio-diffusion
     # by Robert Dargavel Smith
-    if args.mel_spec_method == "default":
+    if args.mel_spec_method == "image":
         mel = Mel(
             x_res=args.resolution[0],
             y_res=args.resolution[1],
@@ -328,30 +328,29 @@ def create_dataset(args, audio_files):
     # The BigVGAN method proposed by NVIDIA
     # using code taken from:
     # https://github.com/NVIDIA/BigVGAN/blob/main/meldataset.py
-    elif args.mel_spec_method == "bigvgan":        
-        assert args.bigvgan_model is not None
-
-        bigvgan_config = get_bigvgan_config(args.bigvgan_model)
-        device = 'cuda'
-        try:
+    elif args.mel_spec_method == "bigvgan":
+        
+        def data_generator(audio_files, bigvgan_config, resolution, num_channels):
+            device = 'cpu'
             for audio_file in tqdm(audio_files):
                 try:
                     # Process the audio file
                     wav, sr = librosa.load(audio_file, sr=bigvgan_config["sampling_rate"], mono=True)
-                    wav = torch.FloatTensor(wav).unsqueeze(0) 
+                    wav = torch.FloatTensor(wav).unsqueeze(0)
                     mel = get_mel_spectrogram(wav, bigvgan_config).to(device)
 
                 except KeyboardInterrupt:
                     raise
                 except Exception as e:
-                    print(e)
+                    print(f"Error processing {audio_file}: {e}")
                     continue
 
-                for i, chunk in enumerate(split_mel(mel, args.resolution[0])):
+                # Split mel spectrogram and yield each chunk
+                for i, chunk in enumerate(split_mel(mel, resolution[0])):
                     assert chunk.ndimension() == 3, f"Expected a tensor with 3 dimensions, but got {chunk.ndimension()} dimensions."
-                    assert chunk.shape[2] == args.resolution[0] and chunk.shape[1] == args.resolution[1], "Wrong resolution"
+                    assert chunk.shape[2] == resolution[0] and chunk.shape[1] == resolution[1], "Wrong resolution"
 
-                    # create and save the image
+                    # Create the image from the chunk (if necessary)
                     mel_image = mel_to_image(chunk)
                     img_byte_arr = io.BytesIO()
                     mel_image.save(img_byte_arr, format='PNG')
@@ -360,41 +359,41 @@ def create_dataset(args, audio_files):
                     # Convert the tensor to a numpy array with float32 type
                     mel_numpy = chunk.cpu().numpy().astype("float32")
 
-                    # Store the mel tensor directly in the examples list
-                    examples.extend(
-                        [
-                            {
-                                "mel": chunk,  # Store numpy array
-                                "image": {"bytes": img_byte_arr},
-                                "audio_file": audio_file,
-                                "slice": i,
-                            }
-                        ]
-                    )
-        except Exception as e:
-            print(e)
-        finally:
-            if len(examples) == 0:
-                logger.warn("No valid audio files were found.")
-                return
-            ds = Dataset.from_dict(
-                {
-                    "mel": [ex["mel"] for ex in examples],
-                    "image": [ex["image"] for ex in examples],
-                    "audio_file": [ex["audio_file"] for ex in examples],
-                    "slice": [ex["slice"] for ex in examples],
-                },
-                features=Features(
-                    {
-                        "mel": Array3D(dtype="float32", shape=(args.num_channels, args.resolution[1], args.resolution[0])),
-                        "image": Image(),
-                        "audio_file": Value(dtype="string"),
-                        "slice": Value(dtype="int16"),
+                    # Yield the example as a dictionary
+                    yield {
+                        "mel": chunk,
+                        "image": {"bytes": img_byte_arr},
+                        "audio_file": audio_file,
+                        "slice": i,
                     }
-                ),
+
+        def create_dataset(audio_files, bigvgan_config, resolution, num_channels):
+            # Define the features for the dataset
+            features = Features(
+                {
+                    "mel": Array3D(dtype="float32", shape=(num_channels, resolution[1], resolution[0])),  # Shape of mel tensor
+                    "audio_file": Value(dtype="string"),
+                    "slice": Value(dtype="int16"),
+                }
+            )
+
+            # Create the dataset using the generator
+            ds = Dataset.from_generator(
+                data_generator,
+                gen_kwargs={"audio_files": audio_files, "bigvgan_config": bigvgan_config, "resolution": resolution, "num_channels": num_channels},
+                features=features
             )
             
-            # Save the dataset
+            return ds
+        assert args.bigvgan_model is not None
+
+        bigvgan_config = get_bigvgan_config(args.bigvgan_model)
+        
+        try:
+            # Create the dataset
+            ds = create_dataset(audio_files, bigvgan_config, args.resolution, args.num_channels)
+
+            # Create the DatasetDict and save
             dsd = DatasetDict({"train": ds})
             dsd.save_to_disk(os.path.join(args.output_dir))
 
@@ -402,12 +401,16 @@ def create_dataset(args, audio_files):
             if args.push_to_hub:
                 dsd.push_to_hub(args.push_to_hub)
 
+        except Exception as e:
+            print(f"Error during dataset creation: {e}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create dataset of Mel spectrograms from directory of audio files.")
     parser.add_argument("--input_dir", type=str)
     parser.add_argument("--output_dir", type=str, default="data")
     parser.add_argument("--resolution", type=str, default="256", help="Either square resolution or width,height.")
-    parser.add_argument("--mel_spec_method", type=str, choices=["default", "bigvgan"])
+    parser.add_argument("--max_examples", type=int, default=None, help="If set, will limit the amount of wav files to include in the dataset.")
+    parser.add_argument("--mel_spec_method", type=str, choices=["image", "bigvgan"])
     parser.add_argument("--bigvgan_model", type=str, choices=[
                             "bigvgan_v2_44khz_128band_512x",
                             "bigvgan_v2_44khz_128band_256x",
