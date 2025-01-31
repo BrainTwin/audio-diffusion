@@ -198,21 +198,18 @@ def main(args):
                 dataset, batch_size=args.train_batch_size, shuffle=True)
             
         elif args.mel_spec_method == "bigvgan":
-            # CONTINUE HERE
-            # make sure that the dataset object is being correctly parsed to have a tensor mel field, which is the 'input' from above
-            
             # Determine image resolution
             sample_mel = torch.tensor(dataset[0]['mel'])
             resolution = sample_mel.shape[1], sample_mel.shape[2]
+            
+            def normalize_tensor(tensor, min_val=-1.0, max_val=1.0):
+                tensor_min = tensor.min()
+                tensor_max = tensor.max()
+                return (tensor - tensor_min) / (tensor_max - tensor_min) * (max_val - min_val) + min_val
 
-            augmentations = Compose([
-                ToTensor(),
-                # Normalize([0.5], [0.5]),
-            ])
             
             def transforms(examples):
-                mels = [torch.tensor(mel) for mel in examples["mel"]]
-                
+                mels = [normalize_tensor(torch.tensor(mel, dtype=torch.float32)) for mel in examples["mel"]]                
                 if args.encodings is not None:
                     encoding = [encodings[file] for file in examples["audio_file"]]
                     return {"input": mels, "encoding": encoding}
