@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/hpc_runs/ra_experiment_ssd_2048_128_training.out  # name of output filename
+#SBATCH --output=experiments/hpc_runs/ra_experiment_ssd_2048_128_to_512_32_training.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -63,7 +63,7 @@ application="accelerate"
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
---dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_2048_128\
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_2048_128 \
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ra_ssd_sleep_only_2048_128_to_512_32 \
 --hop_length 256 \
 --n_fft 1024 \
