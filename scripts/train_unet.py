@@ -202,12 +202,10 @@ def main(args):
             sample_mel = torch.tensor(dataset[0]['mel'])
             resolution = sample_mel.shape[1], sample_mel.shape[2]
             
-            def normalize_tensor(tensor, min_val=-1.0, max_val=1.0):
-                tensor_min = tensor.min()
-                tensor_max = tensor.max()
-                return (tensor - tensor_min) / (tensor_max - tensor_min) * (max_val - min_val) + min_val
-
-            
+            def normalize_tensor(tensor, fixed_min=-11.5129, fixed_max=2.1, target_min=-1.0, target_max=1.0):
+                normalized_tensor = (tensor - fixed_min) / (fixed_max - fixed_min) * (target_max - target_min) + target_min
+                return normalized_tensor
+                        
             def transforms(examples):
                 mels = [normalize_tensor(torch.tensor(mel, dtype=torch.float32)) for mel in examples["mel"]]                
                 if args.encodings is not None:
