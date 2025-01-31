@@ -66,9 +66,16 @@ class AudioDiffusion(Dataset):
             image = (image / 255) * 2 - 1
             return {"image": image}
         elif self.mel_spec_method == 'bigvgan':
+            # TODO
+            # normalize to -1, 1 because VAE needs that
             mel = torch.tensor(self.hf_dataset[idx]["mel"])
             # convert to shape (height, width, channels)
             mel = mel.squeeze(0).unsqueeze(-1)
+            
+            mel = np.minimum(mel, 2.1)
+            mel_min, mel_max = -11.5129, 2.1
+            mel = 2 * (mel - mel_min) / (mel_max - mel_min) - 1
+            
             return {"image": mel}
         else:
             raise ValueError(f"Invalid mel_spec_method: {args.mel_spec_method}. Please choose either 'image' or 'bigvgan'.")
