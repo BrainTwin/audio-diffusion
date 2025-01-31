@@ -11,7 +11,6 @@ from .pipeline_audio_diffusion import AudioDiffusionPipeline
 
 VERSION = "1.5.6"
 
-
 class AudioDiffusion:
     def __init__(
         self,

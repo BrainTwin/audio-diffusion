@@ -26,12 +26,19 @@ scripts/train_unet.py \
 GENERATE MEL SPECTROGRAMS FROM AUDIO AND SAVE TO File
 
 nohup python scripts/audio_to_images.py \
---resolution 2048,128 \
+--resolution 512,128 \
 --hop_length 256 \
 --n_fft 1024 \
+--mel_spec_method bigvgan \
+--bigvgan_model bigvgan_v2_44khz_128band_256x \
 --input_dir cache/spotify_sleep_dataset/waveform \
---output_dir cache/spotify_sleep_dataset/waveform/mel_spec_2024_128 \
-> logs/mel_spec_2048_128_conversion.log 2>&1 &
+--output_dir cache/spotify_sleep_dataset/waveform/bigvgan_512_128 \
+--sample_rate 44100 \
+--num_channels 1 \
+> logs/mel_spec_bigvgan_512_128.log 2>&1 &
+
+# check frequency range matches
+# check n_fft
 
 =========================================
 lengthen audios to a target length
