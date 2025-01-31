@@ -8,6 +8,14 @@ import torchaudio
 from torchvision.utils import save_image
 import torchvision.transforms as transforms
 from tqdm import tqdm
+
+
+import sys
+sys.path.insert(0, "/home/th716/audio-diffusion/submodules/diffusers/src/")
+
+import diffusers
+print('printing diffusers file first time')
+print(diffusers.__file__)
 from diffusers import AudioDiffusionPipeline
 from diffusers import (AutoencoderKL, DDIMScheduler, DDPMScheduler,
                        UNet2DConditionModel, UNet2DModel, Mel)
@@ -18,9 +26,14 @@ def main(args):
 
     model_path = args.pretrained_model_path
     output_path = os.path.join(model_path, 'samples')
-    tag = f'sch_{args.scheduler}_nisteps_{args.num_inference_steps}'
-    images_path = os.path.join(output_path, 'images', tag)
-    audios_path = os.path.join(output_path, 'audio', tag)
+    sch_tag = f'sch_{args.scheduler}_nisteps_{args.num_inference_steps}'
+    images_path = os.path.join(output_path, 'images', sch_tag)
+    audios_path = os.path.join(output_path, 'audio', sch_tag)
+    
+    if args.mel_spec_method == "image":
+        gl_tag = f'gl{args.n_iter}'
+        images_path = os.path.join(images_path, gl_tag)
+        audios_path = os.path.join(output_path, gl_tag)
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(images_path, exist_ok=True)
     os.makedirs(audios_path, exist_ok=True)
@@ -73,8 +86,6 @@ def main(args):
                 else:
                     encoding_sample = encodings[:batch_size]
             
-            # TODO
-            # We need to fix images to return a tensor and not a PIL image with data loss
             images, (sample_rate, audios) = pipeline(
                 generator=generator, 
                 batch_size=batch_size,
@@ -95,7 +106,8 @@ def main(args):
                 audio_tensor = torch.tensor(audios[i]).unsqueeze(0)  # Convert numpy array to tensor and add batch dimension
                 torchaudio.save(audio_path, audio_tensor, sample_rate)
             elif args.mel_spec_method == "bigvgan":
-                min_original, max_original = -11.5127, 20
+                # for now we are working with images, and it works fine so we keep it at that
+                min_original, max_original = -11.5127, 2.1
                 min_pixel, max_pixel = 0, 255
                 def reverse_normalize(tensor):
                     return min_original + (tensor - min_pixel) * (max_original - min_original) / (max_pixel - min_pixel)
