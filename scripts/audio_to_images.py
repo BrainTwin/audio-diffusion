@@ -358,7 +358,10 @@ def create_dataset(args, audio_files):
 
                     # Convert the tensor to a numpy array with float32 type
                     mel_numpy = chunk.cpu().numpy().astype("float32")
-
+                    
+                    cutoff = 2.1
+                    chunk = torch.clamp(chunk, min=None, max=cutoff)  # Cap values at the cutoff
+                    
                     # Yield the example as a dictionary
                     yield {
                         "mel": chunk,
