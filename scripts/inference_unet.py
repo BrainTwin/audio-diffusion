@@ -106,6 +106,9 @@ def main(args):
                 audio_tensor = torch.tensor(audios[i]).unsqueeze(0)  # Convert numpy array to tensor and add batch dimension
                 torchaudio.save(audio_path, audio_tensor, sample_rate)
             elif args.mel_spec_method == "bigvgan":
+                # TODO
+                # make the pipeline object return a tensor as well, not just a PIL image
+                # /home/th716/audio-diffusion/submodules/diffusers/src/diffusers/pipelines/audio_diffusion/pipeline_audio_diffusion.py
                 # for now we are working with images, and it works fine so we keep it at that
                 min_original, max_original = -11.5127, 2.1
                 min_pixel, max_pixel = 0, 255
