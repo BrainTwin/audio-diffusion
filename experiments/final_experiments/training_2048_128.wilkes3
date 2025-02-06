@@ -67,6 +67,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_2048_128 \
 --hop_length 256 \
 --n_fft 1024 \
+--sample_rate 22050 \
 --train_batch_size 16 \
 --eval_batch_size 16 \
 --num_epochs 1000000 \
