@@ -130,9 +130,7 @@ def main(args):
                     else:
                         encoding_sample = encodings[:batch_size]
                 
-                
-                # TODO
-                # continue debugging if this is correct
+            
                 images, (sample_rate, audios) = pipeline(
                     generator=generator, 
                     batch_size=batch_size,
@@ -156,7 +154,7 @@ def main(args):
                     # TODO
                     # make the pipeline object return a tensor as well, not just a PIL image
                     # /home/th716/audio-diffusion/submodules/diffusers/src/diffusers/pipelines/audio_diffusion/pipeline_audio_diffusion.py
-                    # for now we are working with images, and it works fine so we keep it at that
+                    # for now we are working with images, and it works "fine" so we keep it at that
                     min_original, max_original = -11.5127, 2.1
                     min_pixel, max_pixel = 0, 255
                     def reverse_normalize(tensor):

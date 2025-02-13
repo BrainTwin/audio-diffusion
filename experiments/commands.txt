@@ -130,6 +130,8 @@ scripts/train_unet.py \
 --train_scheduler ddpm \
 --test_scheduler ddpm \
 
+
+
 In particular, I want to cycle through these variable combinations
 
 dataset_name: /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/mel_spec_64_64
@@ -151,3 +153,120 @@ output_dir: /home/th716/rds/hpc-work/audio-diffusion/models/drum_samples_256_256
 
 dataset_name: /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256
 output_dir: /home/th716/rds/hpc-work/audio-diffusion/models/spotify_sleep_dataset_256_256
+
+=================================================================================
+
+conversion of mel-spectrograms to audio
+models to use:
+- bigvgan_base_24khz_100band
+- bigvgan_24khz_100band
+- bigvgan_v2_44khz_128band_256x
+- griffin-lim algorithm
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 16 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz/converted_audio_gl16 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 22050 \
+    > logs/gl16_sr22k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz/converted_audio_gl32 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 22050 \
+    > logs/gl32_sr22k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 64 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz/converted_audio_gl64 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 22050 \
+    > logs/gl64_sr22k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 128 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_22khz/converted_audio_gl128 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 22050 \
+    > logs/gl128_sr22k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 16 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz/converted_audio_gl16 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 44100 \
+    > logs/gl16_sr44k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz/converted_audio_gl32 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 44100 \
+    > logs/gl32_sr44k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 64 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz/converted_audio_gl64 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 44100 \
+    > logs/gl64_sr44k.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 128 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/mel_spec_44khz/converted_audio_gl128 \
+    --hop_length 256 \
+    --n_fft 1024 \
+    --sample_rate 44100 \
+    > logs/gl128_sr44k.log 2>&1 &
+
+=================================================================================
+
+Evaluate a generated set with a reference set.
+Below are experiments for the incremental evaluation of various ground-truth back-converted
+
+TODO
+Continue from here, figure out why the command is not working. Is it an environment thing?
+
+
+nohup python scripts/evaluation.py \
+    --reference_paths cache/spotify_sleep_dataset/waveform \
+    cache/fma_pop/waveform \
+    cache/musiccaps/waveform \
+    --generated_path cache/spotify_sleep_dataset/waveform_selection_1024/bigvgan_24khz_100band/converted_audio \
+    --metric frechet_audio_distance \
+    --model_names clap-laion-audio clap-laion-music vggish \
+    --log_dir models/evaluation \
+    > logs/incr_eval_bigvgan_24khz_100band.log 2>&1 &
+
