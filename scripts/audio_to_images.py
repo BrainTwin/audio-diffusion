@@ -149,7 +149,7 @@ def get_bigvgan_config(bigvgan_model_name):
         cfg["hop_size"] = 256
         cfg["win_size"] = 1024
         cfg["fmin"] = 0
-        cfg["fmax"] = None
+        cfg["fmax"] = 12000
         
     elif bigvgan_model_name == 'bigvgan_v2_44khz_128band_256x':
         cfg["n_fft"] = 1024
@@ -158,7 +158,25 @@ def get_bigvgan_config(bigvgan_model_name):
         cfg["hop_size"] = 256
         cfg["win_size"] = 1024
         cfg["fmin"] = 0
-        cfg["fmax"] = None
+        cfg["fmax"] = 22050
+        
+    elif bigvgan_model_name == 'bigvgan_base_24khz_100band':
+        cfg["n_fft"] = 1024
+        cfg["num_mels"] = 100
+        cfg["sampling_rate"] = 24000
+        cfg["hop_size"] = 256
+        cfg["win_size"] = 1024
+        cfg["fmin"] = 0
+        cfg["fmax"] = 12000
+        
+    elif bigvgan_model_name == 'bigvgan_24khz_100band':
+        cfg["n_fft"] = 1024
+        cfg["num_mels"] = 100
+        cfg["sampling_rate"] = 24000
+        cfg["hop_size"] = 256
+        cfg["win_size"] = 1024
+        cfg["fmin"] = 0
+        cfg["fmax"] = 12000
  
  
     else:
@@ -392,20 +410,19 @@ def create_dataset(args, audio_files):
 
         bigvgan_config = get_bigvgan_config(args.bigvgan_model)
         
-        try:
-            # Create the dataset
-            ds = create_dataset(audio_files, bigvgan_config, args.resolution, args.num_channels)
 
-            # Create the DatasetDict and save
-            dsd = DatasetDict({"train": ds})
-            dsd.save_to_disk(os.path.join(args.output_dir))
+        # Create the dataset
+        ds = create_dataset(audio_files, bigvgan_config, args.resolution, args.num_channels)
 
-            # Optionally push to hub
-            if args.push_to_hub:
-                dsd.push_to_hub(args.push_to_hub)
+        # Create the DatasetDict and save
+        dsd = DatasetDict({"train": ds})
+        dsd.save_to_disk(os.path.join(args.output_dir))
 
-        except Exception as e:
-            print(f"Error during dataset creation: {e}")
+        # Optionally push to hub
+        if args.push_to_hub:
+            dsd.push_to_hub(args.push_to_hub)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create dataset of Mel spectrograms from directory of audio files.")
