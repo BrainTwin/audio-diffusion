@@ -6,6 +6,8 @@ from statistics import mean
 import subprocess
 import sys
 
+print(sys.path)
+
 import torch
 import torch.nn.functional as F
 import torchaudio
@@ -94,7 +96,7 @@ def run_fad_calculation(model_name, reference_path, generated_path):
         command = ['fadtk', model_name, reference_path, generated_path]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         main_pattern = r'__main__.py:\d+'
-        result = re.sub(main_pattern, '', result.stdout)
+        result = re.sub(main_pattern, '', result.stderr)
         print(f'Raw result is: {result}\n\n')
         
         space_pattern = r'[\n\t]+'
