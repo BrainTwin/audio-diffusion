@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -J eval
+#SBATCH -J evaluation_22khz_gl16.wilkes3
 #SBATCH -A NALLAPERUMA-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -26,8 +26,7 @@ conda activate fadtk_new_env
 
 application="accelerate"
 
-options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
-/home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
+options="python /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform \
 /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform \
 /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform \
