@@ -24,7 +24,7 @@ source ~/.bashrc
 conda init bash
 conda activate fadtk_new_env
 
-application="accelerate"
+application="python"
 
 options="python /home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform \
