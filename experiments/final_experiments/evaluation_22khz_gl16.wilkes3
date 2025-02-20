@@ -21,11 +21,11 @@ module purge  # Remove all loaded modules
 module load rhel8/default-amp  # Required module
 module load miniconda/3  # Load Miniconda for Conda support
 
-# Ensure conda is initialized
-eval "$(conda shell.bash hook)"  # Activate Conda properly
-conda activate fadtk_new_env  # Activate the correct Conda environment
+# Explicitly source Conda
+source /usr/local/software/master/miniconda/3/etc/profile.d/conda.sh
+conda activate fadtk_new_env
 
-# Debugging: Confirm the correct Python is being used
+# Debugging: Confirm Python is using the correct environment
 echo "Using Python: $(which python)"
 python -c "import torch; print(torch.__version__)"
 
