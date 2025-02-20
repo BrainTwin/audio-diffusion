@@ -15,17 +15,17 @@ numtasks=$SLURM_NTASKS
 mpi_tasks_per_node=$(echo "$SLURM_TASKS_PER_NODE" | sed -e  's/^\([0-9][0-9]*\).*$/\1/')
 
 
-. /etc/profile.d/modules.sh               # Leave this line (enables the module command)
-module purge                              # Removes all modules still loaded
-module load rhel8/default-amp             # REQUIRED - loads the basic environment
-module load miniconda/3                   # Load Anaconda for Conda support, adjust as necessary
+# Load required modules
+. /etc/profile.d/modules.sh  # Ensures module command is available
+module purge  # Remove all loaded modules
+module load rhel8/default-amp  # Required module
+module load miniconda/3  # Load Miniconda for Conda support
 
-source ~/.bashrc  
+# Ensure conda is initialized
+eval "$(conda shell.bash hook)"  # Activate Conda properly
+conda activate fadtk_new_env  # Activate the correct Conda environment
 
-conda init bash
-conda activate fadtk_new_env              # Activate your Conda environment
-
-# Debugging: Check if conda activation worked
+# Debugging: Confirm the correct Python is being used
 echo "Using Python: $(which python)"
 python -c "import torch; print(torch.__version__)"
 
