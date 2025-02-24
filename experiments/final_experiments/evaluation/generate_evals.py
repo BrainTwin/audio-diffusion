@@ -39,8 +39,8 @@ application="~/.conda/envs/fadtk_new_env/bin/python"
 options="/home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform \
 /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform \
---generated_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_{hl}_nfft_{nfft} \
---log_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_{hl}_nfft_{nfft}/logs \
+--generated_path /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_{hl}_nfft_{nfft}/converted_gl32 \
+--log_dir /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_{hl}_nfft_{nfft}/converted_gl32/logs \
 --metric frechet_audio_distance \
 --model_names clap-laion-audio clap-laion-music vggish"
 
