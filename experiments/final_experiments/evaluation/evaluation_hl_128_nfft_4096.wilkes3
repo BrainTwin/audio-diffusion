@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#SBATCH -J evaluation_512_128_hl_128_nfft_4096.wilkes3
+#SBATCH -A NALLAPERUMA-SL2-GPU
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --gres=gpu:1
+#SBATCH --time=01:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --output=experiments/final_hpc_runs/evaluation_512_128_hl_128_nfft_4096.out
+#SBATCH -p ampere
+
+numnodes=$SLURM_JOB_NUM_NODES
+numtasks=$SLURM_NTASKS
+mpi_tasks_per_node=$(echo "$SLURM_TASKS_PER_NODE" | sed -e  's/^\([0-9][0-9]*\).*$//')
+
+. /etc/profile.d/modules.sh
+module purge
+module load rhel8/default-amp
+module load miniconda/3
+
+source ~/.bashrc  
+conda init bash
+conda activate fadtk_new_env
+
+application="~/.conda/envs/fadtk_new_env/bin/python"
+
+options="/home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform --generated_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_128_nfft_4096 --log_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_128_nfft_4096/logs --metric frechet_audio_distance --model_names clap-laion-audio clap-laion-music vggish"
+
+CMD="$application $options"
+
+workdir="/home/th716/rds/hpc-work/audio-diffusion"
+
+cd $workdir
+echo -e "Changed directory to `pwd`.
+"
+
+JOBID=$SLURM_JOB_ID
+echo -e "JobID: $JOBID
+======"
+echo "Time: `date`"
+echo "Running on master node: `hostname`"
+echo "Current directory: `pwd`"
+
+if [ "$SLURM_JOB_NODELIST" ]; then
+    export NODEFILE=`generate_pbs_nodefile`
+    cat $NODEFILE | uniq > machine.file.$JOBID
+    echo -e "
+Nodes allocated:
+================"
+    echo `cat machine.file.$JOBID | sed -e 's/\..*$//g'`
+fi
+
+echo -e '
+numtasks=$numtasks, numnodes=$numnodes, mpi_tasks_per_node=$mpi_tasks_per_node (OMP_NUM_THREADS=$OMP_NUM_THREADS)'
+
+echo -e "
+Executing command:
+==================
+$CMD
+"
+
+eval $CMD
