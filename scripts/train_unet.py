@@ -4,6 +4,7 @@ import argparse
 import os
 import pickle
 import random
+import re
 from pathlib import Path
 import time
 from typing import Optional
@@ -67,6 +68,10 @@ def denoise_waveforms(model, noisy_waveforms, num_inference_steps, scheduler):
             noisy_waveforms = scheduler.step(noise_pred, t, noisy_waveforms).prev_sample
     return noisy_waveforms
 
+def extract_checkpoint_step(path):
+    """Extracts the step number from the checkpoint directory path."""
+    match = re.search(r'model_step_(\d+)', path)
+    return int(match.group(1)) if match else 0
 
 
 def get_full_repo_name(model_id: str,
@@ -246,6 +251,7 @@ def main(args):
                 torch.zeros((1, 1) +
                             resolution)).latent_dist.sample().shape[2:]
 
+    previous_global_step = 0
     if args.from_pretrained is not None:
         pipeline = AudioDiffusionPipeline.from_pretrained(args.from_pretrained)
         if not args.use_waveform:
@@ -253,6 +259,10 @@ def main(args):
         model = pipeline.unet
         if hasattr(pipeline, "vqvae"):
             vqvae = pipeline.vqvae
+        
+        # Extract the last checkpoint step from the directory
+        previous_global_step = extract_checkpoint_step(args.from_pretrained)
+        
     else:
         if args.encodings is None:
             if args.use_waveform:
@@ -533,12 +543,12 @@ def main(args):
             logs = {
                 "loss": loss.detach().item(),
                 "lr": lr_scheduler.get_last_lr()[0],
-                "step": global_step,
+                "step": global_step + previous_global_step,
             }
             if args.use_ema:
                 logs["ema_decay"] = ema_model.decay
             progress_bar.set_postfix(**logs)
-            accelerator.log(logs, step=global_step)
+            accelerator.log(logs, step=global_step + previous_global_step)
             
             if accelerator.is_main_process:
                 if (global_step in args.save_model_steps
@@ -549,7 +559,7 @@ def main(args):
                     if args.use_ema:
                         ema_model.copy_to(unet.parameters())
                     if args.use_waveform:
-                        torch.save(unet.state_dict(), os.path.join(output_dir, f"unet1dmodel_step_{global_step}.pth"))
+                        torch.save(unet.state_dict(), os.path.join(output_dir, f"unet1dmodel_step_{global_step + previous_global_step}.pth"))
                     else:
                         pipeline = AudioDiffusionPipeline(
                             vqvae=vqvae,
@@ -557,11 +567,11 @@ def main(args):
                             mel=mel,
                             scheduler=train_noise_scheduler,
                         )
-                        pipeline.save_pretrained(os.path.join(output_dir, f"model_step_{global_step}"))
+                        pipeline.save_pretrained(os.path.join(output_dir, f"model_step_{global_step + previous_global_step}"))
 
                     if args.push_to_hub:
                         repo.push_to_hub(
-                            commit_message=f"global_step {global_step}",
+                            commit_message=f"global_step {global_step + previous_global_step}",
                             blocking=False,
                             auto_lfs_prune=True,
                         )
@@ -587,7 +597,7 @@ def main(args):
                             accelerator.trackers[0].writer.add_audio(
                                 f"test_audio_{idx}",
                                 normalize(audio.cpu().numpy()),
-                                global_step,
+                                global_step + previous_global_step,
                                 sample_rate=args.sample_rate,
                             )
                     else:
@@ -605,12 +615,12 @@ def main(args):
                             for image in images
                         ])
                         accelerator.trackers[0].writer.add_images(
-                            "test_samples", images, global_step)
+                            "test_samples", images, global_step + previous_global_step)
                         for idx, audio in enumerate(audios):
                             accelerator.trackers[0].writer.add_audio(
                                 f"test_audio_{idx}",
                                 normalize(audio),
-                                global_step,
+                                global_step + previous_global_step,
                                 sample_rate=sample_rate,
                             )
                 accelerator.wait_for_everyone()
@@ -628,7 +638,7 @@ def main(args):
             "total_training_time": total_training_time,
             "training_time_per_step": training_time_per_step,
         })
-        accelerator.log(logs, step=global_step)    
+        accelerator.log(logs, step=global_step+previous_global_step)    
             
         progress_bar.close()
 
