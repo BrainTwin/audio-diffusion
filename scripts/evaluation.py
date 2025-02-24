@@ -119,6 +119,7 @@ def log_to_tensorboard(log_dir, step, fad_score, metric_log_name):
     """
     Logs the given FAD score to TensorBoard.
     """
+    os.makedirs(log_dir, exist_ok=True)
     with SummaryWriter(log_dir) as writer:
         writer.add_scalar(metric_log_name, fad_score, step)
 

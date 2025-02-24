@@ -31,7 +31,7 @@ options="/home/th716/rds/hpc-work/audio-diffusion/scripts/evaluation.py \
 /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform \
 /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform \
 --generated_path /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/bigvgan_24khz_100band/converted_audio \
---log_dir /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/bigvgan_24khz_100band/converted_audio \
+--log_dir /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform_selection_1024/bigvgan_24khz_100band/converted_audio/logs \
 --metric frechet_audio_distance \
 --model_names clap-laion-audio clap-laion-music vggish"
 
