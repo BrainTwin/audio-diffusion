@@ -84,6 +84,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --test_scheduler ddpm \
 --model_size small \
 
+--from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_512_128/model_step_100000 \
+
 --mel_spec_method image"
 
 CMD="$application $options"

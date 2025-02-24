@@ -85,6 +85,8 @@ options="/home/th716/rds/hpc-work/audio-diffusion/scripts/train_vae.py \
 --model_size medium \
 --latent_dims 128,32 \
 
+--resume_from_checkpoint /home/th716/rds/hpc-work/audio-diffusion/models/final_models/ldm_vae_ssd_512_128_to_128_32_so/d_/home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/final_datasets/bigvgan_512_128_sleep_only_/last.ckpt \
+
 --mel_spec_method image"
 
 CMD="$application $options"
