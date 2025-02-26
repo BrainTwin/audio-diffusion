@@ -21,7 +21,7 @@ conda activate audiodiff_env
 application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py \
---pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_2048_128_so_bigvgan/model_step_xxxxx \
+--pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_2048_128_so_bigvgan/model_step_130000 \
 --num_images 1024 \
 --eval_batch_size 16 \
 --num_inference_steps 1000 \
