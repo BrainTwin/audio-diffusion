@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=36:00:00
+#SBATCH --time=07:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --output=experiments/final_hpc_runs/inference_ssd_512_128_hl256_nfft512_so_gl32_msxxxxx.out
 #SBATCH -p ampere
