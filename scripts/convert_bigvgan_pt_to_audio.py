@@ -37,8 +37,19 @@ def process_directory(directory, bigvgan_model_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert .pt files to .wav using BigVGAN.")
-    parser.add_argument("directory", type=str, help="Directory containing .pt files.")
-    parser.add_argument("bigvgan_model_name", type=str, help="Name of the BigVGAN model to use.")
+    parser.add_argument("--directory", type=str, help="Directory containing .pt files.")
+    parser.add_argument("--bigvgan_model", type=str, default="bigvgan_v2_44khz_128band_256x", choices=[
+                            "bigvgan_v2_44khz_128band_512x",
+                            "bigvgan_v2_44khz_128band_256x",
+                            "bigvgan_v2_24khz_100band_256x",
+                            "bigvgan_v2_22khz_80band_256x",
+                            "bigvgan_v2_22khz_80band_fmax8k_256x",
+                            "bigvgan_24khz_100band",
+                            "bigvgan_base_24khz_100band",
+                            "bigvgan_22khz_80band",
+                            "bigvgan_base_22khz_80band"
+                        ], 
+                        help='If the bigvgan method for mel-spectrogram generation is selected, pick which pre-trained model to use as the configuration.')
     args = parser.parse_args()
     
     process_directory(args.directory, args.bigvgan_model_name)
