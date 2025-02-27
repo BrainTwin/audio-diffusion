@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/final_hpc_runs/ssd_512_128_hl128_nfft512_so_training.out  # name of output filename
+#SBATCH --output=experiments/final_hpc_runs/ssd_512_128_hl512_nfft1024_so_training.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -63,10 +63,10 @@ application="accelerate"
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
---dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/final_datasets/mel_spec_512_128_hl128_nfft512_sleep_only \
---output_dir /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_512_128_hl128_nfft512_so \
---hop_length 128 \
---n_fft 512 \
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/final_datasets/mel_spec_512_128_hl512_nfft1024_sleep_only \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_512_128_hl512_nfft1024_so \
+--hop_length 512 \
+--n_fft 1024 \
 --sample_rate 22050 \
 --train_batch_size 16 \
 --eval_batch_size 16 \
@@ -83,6 +83,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --train_scheduler ddpm \
 --test_scheduler ddpm \
 --model_size small \
+
+--from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_512_128_hl512_nfft1024_so/model_step_75000 \
 
 --mel_spec_method image"
 
