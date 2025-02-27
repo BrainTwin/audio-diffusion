@@ -8,9 +8,7 @@ import bigvgan
 
 device = 'cuda'
 
-def convert_bigvgan_tensor_to_audio(mel_tensor, output_path, model):
-
-      
+def convert_bigvgan_tensor_to_audio(mel_tensor, output_path, model):    
     mel_tensor = mel_tensor.to(device)
     
     with torch.inference_mode():
