@@ -9,7 +9,6 @@ from tqdm import tqdm
 import pickle
 
 import librosa
-import matplotlib.pyplot as plt
 import pyloudnorm as pyln
 import soundfile as sf
 import torch
@@ -30,8 +29,7 @@ from accelerate import Accelerator
 
 # TODO
 # - check mel spectrogram incorporation and if it can be set/changed. Esp with griffin lim iterations
-# - integrate continuous inpainting and tested on debugger
-# - 
+
 
 def main(args):
     accelerator = Accelerator()
@@ -45,11 +43,11 @@ def main(args):
     if args.mel_spec_method == "image":
         gl_tag = f'gl{args.n_iter}'
         images_path = os.path.join(images_path, gl_tag)
-        audios_path = os.path.join(output_path, gl_tag)
+        audios_path = os.path.join(audios_path, gl_tag)
     elif args.mel_spec_method == "bigvgan":
         bgvg_tag = 'bigvgan'
         images_path = os.path.join(images_path, bgvg_tag)
-        audios_path = os.path.join(output_path, bgvg_tag)
+        audios_path = os.path.join(audios_path, bgvg_tag)
         
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(images_path, exist_ok=True)
@@ -167,7 +165,6 @@ def main(args):
                     # Save the tensor to a file
                     tensor_path = os.path.join(images_path, f"tensor_{image_index}.pt")
                     torch.save(tensor_image, tensor_path)
-                
 
             generated_count += batch_size
 

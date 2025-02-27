@@ -37,8 +37,78 @@ nohup python scripts/audio_to_images.py \
 --num_channels 1 \
 > logs/mel_spec_bigvgan_512_128.log 2>&1 &
 
+nohup python scripts/audio_to_images.py \
+--resolution 512,128 \
+--hop_length 256 \
+--n_fft 1024 \
+--mel_spec_method image \
+--input_dir cache/spotify_sleep_dataset/waveform_selection_1024 \
+--output_dir cache/spotify_sleep_dataset/waveform_selection_1024/ \
+--sample_rate 44100 \
+--num_channels 1 \
+> logs/mel_spec_bigvgan_512_128.log 2>&1 &
+
 # check frequency range matches
 # check n_fft
+
+# generating for alternative mel-spectrogram resolutions
+
+nohup python scripts/audio_to_images.py \
+--resolution 512,128 \
+--hop_length 256 \
+--n_fft 512 \
+--mel_spec_method bigvgan \
+--bigvgan_model bigvgan_v2_44khz_128band_256x \
+--input_dir cache/spotify_sleep_dataset/waveform_sleep_only \
+--output_dir cache/spotify_sleep_dataset/final_dataset/bigvgan_512_128_hl256_nfft512_sleep_only \
+--sample_rate 44100 \
+--num_channels 1 \
+> logs/mel_spec_bigvgan_512_128_hl256_nfft512_sleep_only.log 2>&1 &
+
+nohup python scripts/audio_to_images.py \
+--resolution 512,128 \
+--hop_length 128 \
+--n_fft 512 \
+--mel_spec_method bigvgan \
+--bigvgan_model bigvgan_v2_44khz_128band_256x \
+--input_dir cache/spotify_sleep_dataset/waveform_sleep_only \
+--output_dir cache/spotify_sleep_dataset/final_datasets/bigvgan_512_128_hl128_nfft512_sleep_only \
+--sample_rate 44100 \
+--num_channels 1 \
+> logs/mel_spec_bigvgan_512_128_hl128_nfft512_sleep_only.log 2>&1 &
+
+nohup python scripts/audio_to_images.py \
+--resolution 512,128 \
+--hop_length 256 \
+--n_fft 512 \
+--mel_spec_method image \
+--input_dir cache/spotify_sleep_dataset/waveform_sleep_only \
+--output_dir cache/spotify_sleep_dataset/final_datasets/mel_spec_512_128_hl256_nfft512_sleep_only \
+--sample_rate 22050 \
+--num_channels 1 \
+> logs/mel_spec_512_128_hl256_nfft512_sleep_only.log 2>&1 &
+
+nohup python scripts/audio_to_images.py \
+--resolution 512,128 \
+--hop_length 128 \
+--n_fft 512 \
+--mel_spec_method image \
+--input_dir cache/spotify_sleep_dataset/waveform_sleep_only \
+--output_dir cache/spotify_sleep_dataset/final_datasets/mel_spec_512_128_hl128_nfft512_sleep_only \
+--sample_rate 22050 \
+--num_channels 1 \
+> logs/mel_spec_512_128_hl128_nfft512_sleep_only.log 2>&1 &
+
+nohup python scripts/audio_to_images.py \
+--resolution 512,128 \
+--hop_length 512 \
+--n_fft 1024 \
+--mel_spec_method image \
+--input_dir cache/spotify_sleep_dataset/waveform_sleep_only \
+--output_dir cache/spotify_sleep_dataset/final_datasets/mel_spec_512_128_hl512_nfft1024_sleep_only \
+--sample_rate 22050 \
+--num_channels 1 \
+> logs/mel_spec_512_128_hl512_nfft1024_sleep_only.log 2>&1 &
 
 =========================================
 lengthen audios to a target length
@@ -258,6 +328,7 @@ Below are experiments for the incremental evaluation of various ground-truth bac
 
 TODO
 Continue from here, figure out why the command is not working. Is it an environment thing?
+This has been done on the HPC
 
 
 nohup python scripts/evaluation.py \
@@ -270,3 +341,62 @@ nohup python scripts/evaluation.py \
     --log_dir models/evaluation \
     > logs/incr_eval_bigvgan_24khz_100band.log 2>&1 &
 
+
+=================================================================================
+
+Mel Spectrograms to Audio for mel-spec variables experiments
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_256 \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_256/converted_gl32 \
+    --hop_length 64 \
+    --n_fft 256 \
+    --sample_rate 22050 \
+    > logs/hl64_nfft256_gl32.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_512 \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_512/converted_gl32 \
+    --hop_length 64 \
+    --n_fft 512 \
+    --sample_rate 22050 \
+    > logs/hl64_nfft512_gl32.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_1024 \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_1024/converted_gl32 \
+    --hop_length 64 \
+    --n_fft 1024 \
+    --sample_rate 22050 \
+    > logs/hl64_nfft1024_gl32.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_2048 \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_2048/converted_gl32 \
+    --hop_length 64 \
+    --n_fft 2048 \
+    --sample_rate 22050 \
+    > logs/hl64_nfft2048_gl32.log 2>&1 &
+
+nohup python3 scripts/mel_to_audio_conversion.py \
+    --generation_method image \
+    --griffin_lim_iters 32 \
+    --num_samples 1024 \
+    --mel_spec_path /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_4096 \
+    --output_dir /home/th716/audio-diffusion/cache/spotify_sleep_dataset/waveform_1024/mel_spec_512_128_hl_64_nfft_4096/converted_gl32 \
+    --hop_length 64 \
+    --n_fft 4096 \
+    --sample_rate 22050 \
+    > logs/hl64_nfft4096_gl32.log 2>&1 &
