@@ -473,6 +473,7 @@ def main(args):
         )
 
     global_step = 0
+    last_checkpoint_step = max(args.save_model_steps)  # Get last checkpoint step
     total_start_time = time.time()
     
     for epoch in range(args.num_epochs):
@@ -625,7 +626,7 @@ def main(args):
                             )
                 accelerator.wait_for_everyone()
 
-                if global_step >= args.max_training_num_steps:
+                if (global_step >= args.max_training_num_steps) or (global_step + previous_global_step) >= last_checkpoint_step:
                     accelerator.end_training()
                     return
 
