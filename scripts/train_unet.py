@@ -626,7 +626,7 @@ def main(args):
                             )
                 accelerator.wait_for_everyone()
 
-                if (global_step >= args.max_training_num_steps) or (global_step + previous_global_step) >= last_checkpoint_step:
+                if (global_step >= args.max_training_num_steps) or (global_step + previous_global_step) >= (last_checkpoint_step + previous_global_step):
                     accelerator.end_training()
                     return
 
