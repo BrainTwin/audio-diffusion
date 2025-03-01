@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J inference
+#SBATCH -J inference_ssd_512_128_hl512_nfft1024_so_gl32_ms200000
 #SBATCH -A NALLAPERUMA-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=07:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --output=experiments/final_hpc_runs/inference_ssd_512_128_hl512_nfft1024_so_gl32_msxxxxx.out
+#SBATCH --output=experiments/final_hpc_runs/inference_ssd_512_128_hl512_nfft1024_so_gl32_ms200000.out
 #SBATCH -p ampere
 
 . /etc/profile.d/modules.sh
@@ -21,7 +21,7 @@ conda activate audiodiff_env
 application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py \
---pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_512_128_hl512_nfft1024_so/model_step_xxxxx \
+--pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_512_128_hl512_nfft1024_so/model_step_200000 \
 --num_images 1024 \
 --eval_batch_size 32 \
 --num_inference_steps 1000 \
