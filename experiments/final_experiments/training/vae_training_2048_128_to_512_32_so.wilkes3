@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 
-#! BATCH -J vae_exp
+#! BATCH -J vae_ssd_2048_128_to_512_32_so_training
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A NALLAPERUMA-SL2-GPU
 #! How many whole nodes should be allocated?
