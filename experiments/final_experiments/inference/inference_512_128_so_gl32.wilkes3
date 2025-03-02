@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J inference
+#SBATCH -J inference_ssd_512_128_so_gl32_ms200000
 #SBATCH -A NALLAPERUMA-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=07:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --output=experiments/final_hpc_runs/inference_ssd_512_128_so_gl32_msxxxxx.out
+#SBATCH --output=experiments/final_hpc_runs/inference_ssd_512_128_so_gl32_ms200000.out
 #SBATCH -p ampere
 
 . /etc/profile.d/modules.sh
