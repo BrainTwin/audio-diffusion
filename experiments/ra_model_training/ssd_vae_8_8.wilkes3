@@ -63,7 +63,7 @@ application="accelerate"
 #! Run options for the application:
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
---dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256 \
+--dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/mel_spec_256_256_so \
 --output_dir /home/th716/rds/hpc-work/audio-diffusion/models/ra_ssd_8_8 \
 --hop_length 256 \
 --n_fft 1024 \
