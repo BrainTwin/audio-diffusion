@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J big_model
-#SBATCH -A NALLAPERUMA-SL3-GPU
+#SBATCH -A NALLAPERUMA-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1

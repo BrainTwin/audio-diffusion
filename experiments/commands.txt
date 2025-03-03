@@ -26,6 +26,17 @@ scripts/train_unet.py \
 GENERATE MEL SPECTROGRAMS FROM AUDIO AND SAVE TO File
 
 nohup python scripts/audio_to_images.py \
+--resolution 256,256 \
+--hop_length 256 \
+--n_fft 1024 \
+--mel_spec_method image \
+--input_dir cache/spotify_sleep_dataset/waveform_sleep_only \
+--output_dir cache/spotify_sleep_dataset/waveform_sleep_only/mel_spec_256_256_so \
+--sample_rate 22050 \
+--num_channels 1 \
+> logs/mel_spec_256_256_so.log 2>&1 &
+
+nohup python scripts/audio_to_images.py \
 --resolution 512,128 \
 --hop_length 256 \
 --n_fft 1024 \
