@@ -86,7 +86,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 
 --mel_spec_method bigvgan \
 
---from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_2048_128_bigvgan/model_step_100000 \
+--from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan/model_step_100000 \
 
 --vae /home/th716/rds/hpc-work/audio-diffusion/models/final_models/vae_ssd_2048_128_to_512_32_so_bigvgan"
 
