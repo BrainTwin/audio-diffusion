@@ -76,7 +76,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 50000 100000 120000 130000 140000 150000 160000 170000 180000 190000 200000 210000 220000 230000 240000 250000 260000 270000 280000 290000 300000 \
+--save_model_steps 50000 100000 150000 200000 250000 300000 350000 400000 410000 420000 430000 440000 450000 460000 470000 480000 490000 500000 510000 520000 530000 540000 550000 \
 --save_images_steps 50000 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
@@ -85,6 +85,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --model_size small \
 
 --mel_spec_method image \
+
+--from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_512_128_to_128_32_so/model_step_300000 \
 
 --vae /home/th716/rds/hpc-work/audio-diffusion/models/final_models/vae_ssd_512_128_to_128_32_so"
 
