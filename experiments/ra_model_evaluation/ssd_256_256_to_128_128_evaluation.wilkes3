@@ -31,8 +31,8 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --reference_paths /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/waveform_sleep_only \
 /home/th716/rds/hpc-work/audio-diffusion/cache/fma_pop/waveform \
 /home/th716/rds/hpc-work/audio-diffusion/cache/musiccaps/waveform \
---generated_path /home/th716/rds/hpc-work/audio-diffusion/models/ssd_256_256_to_128_128/model_step_80000/samples/audio/sch_ddpm_nisteps_1000 \
---log_dir /home/th716/rds/hpc-work/audio-diffusion/models/ssd_256_256_to_128_128/model_step_80000/samples/sch_ddpm_nisteps_1000 \
+--generated_path /home/th716/rds/hpc-work/audio-diffusion/models/ssd_256_256_to_128_128/model_step_80000/samples/audio/sch_ddpm_nisteps_1000/gl32 \
+--log_dir /home/th716/rds/hpc-work/audio-diffusion/models/ssd_256_256_to_128_128/model_step_80000/samples/sch_ddpm_nisteps_1000/gl32/logs \
 --metric frechet_audio_distance \
 --model_names clap-laion-audio clap-laion-music vggish"
 
