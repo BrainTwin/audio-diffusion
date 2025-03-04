@@ -143,6 +143,10 @@ def get_down_up_blocks_and_channels(latent_x, latent_y):
     
 
 def main(args):
+    
+    total_start_time = time.time()
+    MAX_RUNTIME = args.max_hours * 3600  # 35 hours 30 minutes in seconds, in order
+    
     output_dir = os.environ.get("SM_MODEL_DIR", None) or args.output_dir
     logging_dir = os.path.join(output_dir, args.logging_dir)
     accelerator = Accelerator(
@@ -551,11 +555,14 @@ def main(args):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step + previous_global_step)
             
+            elapsed_time = time.time() - total_start_time
+            
             if accelerator.is_main_process:
                 if (global_step in args.save_model_steps
                         or global_step in args.save_images_steps
                         or epoch == args.num_epochs - 1
-                        or global_step >= args.max_training_num_steps):
+                        or global_step >= args.max_training_num_steps
+                        or elapsed_time >= MAX_RUNTIME):
                     unet = accelerator.unwrap_model(model)
                     if args.use_ema:
                         ema_model.copy_to(unet.parameters())
@@ -663,6 +670,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_waveform", type=bool, default=False)
     parser.add_argument("--waveform_resolution", type=int, default=65536)
     parser.add_argument("--model_size", type=str, default='small')
+    parser.add_argument("--max_hours", type=float, default=35.5, help="determine the number of hours after which point we start saving the model, as the script will wrap up soon.")
     
     parser.add_argument("--output_dir", type=str, default="ddpm-model-64")
     parser.add_argument("--overwrite_output_dir", type=bool, default=False)
