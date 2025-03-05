@@ -583,6 +583,7 @@ def main(args):
                             blocking=False,
                             auto_lfs_prune=True,
                         )
+                                            
 
                 if global_step in args.save_images_steps \
                     or global_step >= args.max_training_num_steps:
@@ -633,7 +634,7 @@ def main(args):
                             )
                 accelerator.wait_for_everyone()
 
-                if (global_step >= args.max_training_num_steps) or (global_step + previous_global_step) >= (last_checkpoint_step + previous_global_step):
+                if (global_step >= args.max_training_num_steps) or ((global_step + previous_global_step) >= (last_checkpoint_step + previous_global_step)) or (elapsed_time >= MAX_RUNTIME):
                     accelerator.end_training()
                     return
 
