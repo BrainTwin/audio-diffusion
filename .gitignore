@@ -14,3 +14,5 @@ Pipfile
 Pipfile.lock
 
 results/plots/
+external/
+.gitmodules
