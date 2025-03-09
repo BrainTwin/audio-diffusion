@@ -186,9 +186,9 @@ if __name__ == "__main__":
         nargs='+',
         choices=[
             'clap-2023', 
-            'clap-laion-audio', 
-            'clap-laion-music', 
-            'vggish', 
+            'clap-laion-audio', # *
+            'clap-laion-music', # * 
+            'vggish', # *
             'MERT-v1-95M-1', 
             'MERT-v1-95M-2', 
             'MERT-v1-95M-3', 

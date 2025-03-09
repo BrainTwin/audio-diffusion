@@ -288,14 +288,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate images using a trained model.")
     parser.add_argument("--pretrained_model_path", type=str, required=True)
     parser.add_argument("--mel_spec_method", type=str, default="image", choices=["image", "bigvgan"])
-    parser.add_argument("--num_images", type=int, default=10)
+    parser.add_argument("--num_images", type=int, default=10, help="Specify the amount of images (mel-spectrograms) to generate.")
     parser.add_argument("--num_inference_steps", type=int, default=50)
-    parser.add_argument("--n_iter", type=int, default=32)
+    parser.add_argument("--n_iter", type=int, default=32, help="Number of griffin-lim iterations to use (only if using 'image' method).")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--eval_batch_size", type=int, default=32)
     parser.add_argument("--scheduler", type=str, default='ddim', choices=['ddim', 'ddpm'])
     parser.add_argument("--eta", type=float, default=60, help="Set the eta parameter (works only if ddim scheduler is used). 0 = DDIM, 1.0 = DDPM.")
-    parser.add_argument("--vae", type=str, default=None, help="Path to a pretrained VAE model.")
     parser.add_argument("--encodings", type=str, default=None, help="Path to pickle file containing encodings.")
     
     # arguments for continuous outpainting

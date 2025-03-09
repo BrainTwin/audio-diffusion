@@ -671,7 +671,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_waveform", type=bool, default=False)
     parser.add_argument("--waveform_resolution", type=int, default=65536)
     parser.add_argument("--model_size", type=str, default='small')
-    parser.add_argument("--max_hours", type=float, default=35.5, help="determine the number of hours after which point we start saving the model, as the script will wrap up soon.")
+    parser.add_argument("--max_hours", type=float, default=35.7, help="determine the number of hours after which point we start saving the model, as the script will wrap up soon.")
     
     parser.add_argument("--output_dir", type=str, default="ddpm-model-64")
     parser.add_argument("--overwrite_output_dir", type=bool, default=False)
