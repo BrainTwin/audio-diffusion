@@ -64,7 +64,7 @@ application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/train_unet.py \
 --dataset_name /home/th716/rds/hpc-work/audio-diffusion/cache/spotify_sleep_dataset/final_datasets/bigvgan_2048_128_sleep_only \
---output_dir /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan \
+--output_dir /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan_new \
 --hop_length 256 \
 --n_fft 1024 \
 --sample_rate 44100 \
@@ -76,7 +76,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 10000 50000 60000 70000 85000 90000 95000 100000 105000 110000 115000 120000 125000 130000 135000 140000 145000 150000 155000 160000 165000 170000 175000 180000 \
+--save_model_steps 10000 20000 30000 50000 60000 70000 85000 90000 95000 100000 105000 110000 115000 120000 125000 130000 135000 140000 145000 150000 155000 160000 165000 170000 175000 180000 \
 --save_images_steps 50000 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
@@ -86,11 +86,9 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 
 --mel_spec_method bigvgan \
 
---from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan/model_step_205000 \
-
 --vae /home/th716/rds/hpc-work/audio-diffusion/models/final_models/vae_ssd_2048_128_to_512_32_so_bigvgan"
 
-
+# --from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan/model_step_205000 \
 
 CMD="$application $options"
 
