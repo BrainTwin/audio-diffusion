@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J inference_ssd_2048_128_to_128_32_so_bigvgan_ms315000
+#SBATCH -J inference_ssd_2048_128_to_128_32_so_bigvgan_ms420000
 #SBATCH -A NALLAPERUMA-SL2-GPU
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=16:00:00
 #SBATCH --mail-type=ALL
-#SBATCH --output=experiments/final_hpc_runs/inference_ssd_2048_128_to_128_32_so_bigvgan_ms315000.out
+#SBATCH --output=experiments/final_hpc_runs/inference_ssd_2048_128_to_128_32_so_bigvgan_ms420000.out
 #SBATCH -p ampere
 
 . /etc/profile.d/modules.sh
@@ -21,7 +21,7 @@ conda activate audiodiff_env
 application="accelerate"
 options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/accelerate_local.yaml \
 /home/th716/rds/hpc-work/audio-diffusion/scripts/inference_unet.py \
---pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan/model_step_315000 \
+--pretrained_model_path /home/th716/rds/hpc-work/audio-diffusion/models/final_models/unet_w_vae_final_ssd_2048_128_to_512_32_so_bigvgan/model_step_420000 \
 --num_images 1024 \
 --eval_batch_size 16 \
 --num_inference_steps 1000 \
