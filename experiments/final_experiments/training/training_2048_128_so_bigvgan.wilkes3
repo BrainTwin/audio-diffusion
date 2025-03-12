@@ -10,7 +10,7 @@
 
 #! sbatch directives begin here ###############################
 
-#! BATCH -J unet
+#! BATCH -J ssd_2048_128_so_bigvgan_retraining
 #! Which project should be charged (NB Wilkes2 projects end in '-GPU'):
 #SBATCH -A NALLAPERUMA-SL2-GPU 
 #! How many whole nodes should be allocated?
@@ -28,7 +28,7 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH --output=experiments/final_hpc_runs/ssd_2048_128_so_bigvgan_training.out  # name of output filename
+#SBATCH --output=experiments/final_hpc_runs/ssd_2048_128_so_bigvgan_retraining.out  # name of output filename
 
 #! Do not change:
 #SBATCH -p ampere
@@ -76,7 +76,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --learning_rate 1e-4 \
 --lr_warmup_steps 500 \
 --mixed_precision no \
---save_model_steps 50000 60000 70000 80000 90000 100000 110000 115000 120000 125000 130000 \
+--save_model_steps 50000 60000 70000 80000 90000 100000 110000 115000 120000 125000 130000 135000 140000 145000 150000 155000 160000 165000 170000 175000 180000 185000 190000 195000 200000 205000 210000 215000 220000 225000 230000 235000 240000 245000 250000 255000 260000 265000 270000 275000 280000 285000 290000 295000 300000 \
 --save_images_steps 50000 \
 --num_train_steps 1000 \
 --num_inference_steps 1000 \
@@ -84,7 +84,7 @@ options="launch --config_file /home/th716/rds/hpc-work/audio-diffusion/config/ac
 --test_scheduler ddpm \
 --model_size small \
 
---from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_2048_128_bigvgan_so/model_step_70000 \
+--from_pretrained /home/th716/rds/hpc-work/audio-diffusion/models/final_models/final_ssd_2048_128_bigvgan_so/model_step_130000 \
 
 --mel_spec_method bigvgan"
 
