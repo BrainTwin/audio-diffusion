@@ -16,7 +16,9 @@ My additions to the repository include:
 
 Across this github repo, there are numerous scripts to handle different parts of the audio processing pipeline, training, inference, and evaluation. We break down the main scripts with the main hyperparameters so that you can get started. To get a full list of the hyperparameters to choose from, you can view the individual scripts and their `args`. The scripts below will show default hyperparameters, but make sure they're matching for your use case.
 
-### Environment Setup
+### Environment and Repository Setup
+
+#### Conda Environment Setup
 To set up the audio diffusion conda environment, use:
 ```
 conda env create -f audiodiff_env.yml
@@ -30,6 +32,15 @@ conda env create -f bigvgan_env.yml
 To set up the FADTK environment, use:
 ```
 conda env create -f fadtk_env.yml
+```
+
+#### Repository Setup
+If training models to be used together with BigVGAN vocoders, we will need to install the BigVGAN repository as a sub-directory.
+
+First, navigate to the main directory of this directory and then clone the repository:
+
+```
+git clone https://github.com/NVIDIA/BigVGAN.git
 ```
 
 ### Preparing Data
@@ -127,6 +138,24 @@ python inference_unet
 --n_iter 32 \
 --eval_batch_size 32 \
 --scheduler ddpm
+```
+
+#### BigVGAN Tensors to Audio Conversion
+If a model generates mel-spectrograms prepared for the BigVGAN vocoder, we need to convert the generated `.pt` files into audio before evaluation.
+
+First, activate the `fadtk_env` conda environment
+```
+conda activate fadtk_env
+```
+
+Then, navigate to the BigVGAN sub-repository
+```
+cd bigvgan
+```
+
+Now, we can use the conversion script, which will create an audio subdirectory with the converted audio files.
+```
+python convert_bigvgan_pt_to_audio.py --directory models/ddpm-bigvgan-model-2048x128/tensors/
 ```
 
 #### Evaluation of Generated Samples
