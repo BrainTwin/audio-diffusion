@@ -4,7 +4,7 @@ import argparse
 import soundfile as sf
 from tqdm import tqdm
 
-import bigvgan
+from bigvgan import bigvgan
 
 device = 'cuda'
 
@@ -13,13 +13,13 @@ def convert_bigvgan_tensor_to_audio(mel_tensor, output_path, model):
     
     with torch.inference_mode():
         wav_gen = model(mel_tensor)  # [B, 1, T_time]
-    wav_gen_float = wav_gen.squeeze(0).cpu()  # [1, T_time]
+    wav_gen_float = wav_gen.squeeze(0).cpu().numpy()  # [1, T_time]
     
-    sample_rate = model.h.sample_rate
-    sf.write(output_path, wav_gen_float, sample_rate)
+    sample_rate = model.h.sampling_rate
+    sf.write(output_path, wav_gen_float.squeeze(), sample_rate)
 
 def process_directory(directory, bigvgan_model):
-    # load directory
+    # load directory10
     pt_files = [f for f in os.listdir(directory) if f.endswith('.pt')]
     
     print(f"Found {len(pt_files)} .pt files in the directory.")
@@ -35,7 +35,10 @@ def process_directory(directory, bigvgan_model):
         mel_tensor = torch.load(pt_path)
         
         wav_filename = os.path.splitext(pt_file)[0] + ".wav"
-        wav_path = os.path.join(directory, wav_filename)
+        audio_dir = os.path.join(directory, 'audio')
+        os.makedirs(audio_dir, exist_ok=True)  # Ensure the 'audio' directory exists
+
+        wav_path = os.path.join(audio_dir, wav_filename)
         
         convert_bigvgan_tensor_to_audio(mel_tensor, wav_path, model)
 
@@ -54,6 +57,6 @@ if __name__ == "__main__":
                             "bigvgan_base_22khz_80band"
                         ], 
                         help='If the bigvgan method for mel-spectrogram generation is selected, pick which pre-trained model to use as the configuration.')
-
     args = parser.parse_args()
+    
     process_directory(args.directory, args.bigvgan_model)

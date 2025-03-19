@@ -175,7 +175,7 @@ def main(args):
         else:
             dataset = load_dataset(
                 "imagefolder",
-                data_dir=args.train_data_dir,
+                data_dir=args.dataset_name,
                 cache_dir=args.cache_dir,
                 split="train",
             )
@@ -231,7 +231,7 @@ def main(args):
         
     # LOAD RAW WAVEFORMS
     else:
-        train_dataset = AudioDataset(args.train_data_dir, chunk_length=args.waveform_resolution)
+        train_dataset = AudioDataset(args.dataset_name, chunk_length=args.waveform_resolution)
         train_dataloader = DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
 
     if args.encodings is not None:
@@ -662,12 +662,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_name", type=str, default=None)
     parser.add_argument("--mel_spec_method", type=str, default='image', choices=['image', 'bigvgan'])
     parser.add_argument("--dataset_config_name", type=str, default=None)
-    parser.add_argument(
-        "--train_data_dir",
-        type=str,
-        default=None,
-        help="A folder containing the training data.",
-    )
+
     parser.add_argument("--use_waveform", type=bool, default=False)
     parser.add_argument("--waveform_resolution", type=int, default=65536)
     parser.add_argument("--model_size", type=str, default='small')
@@ -740,7 +735,7 @@ if __name__ == "__main__":
     if env_local_rank != -1 and env_local_rank != args.local_rank:
         args.local_rank = env_local_rank
 
-    if args.dataset_name is None and args.train_data_dir is None:
+    if args.dataset_name is None and args.dataset_name is None:
         raise ValueError(
             "You must specify either a dataset name from the hub or a train data directory."
         )
