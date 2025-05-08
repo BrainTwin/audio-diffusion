@@ -349,6 +349,29 @@ def main(args):
                             "UpBlock2D",
                         ),
                     )
+                    
+                elif args.model_size == 'tiny':
+                    model = UNet2DModel(
+                        sample_size=resolution if vqvae is None else latent_resolution,
+                        in_channels=1
+                        if vqvae is None else vqvae.config["latent_channels"],
+                        out_channels=1
+                        if vqvae is None else vqvae.config["latent_channels"],
+                        layers_per_block=2,
+                        block_out_channels=(256, 256, 512, 512),
+                        down_block_types=(
+                            "DownBlock2D",
+                            "DownBlock2D",
+                            "AttnDownBlock2D",
+                            "DownBlock2D"
+                        ),
+                        up_block_types=(
+                            "UpBlock2D",
+                            "AttnUpBlock2D",
+                            "UpBlock2D",
+                            "UpBlock2D"
+                        ),
+                    )
         else:
             if args.model_size == 'large':
                 model = UNet2DConditionModel(
