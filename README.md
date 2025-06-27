@@ -12,7 +12,7 @@ My additions to the repository include:
 
 ## Model Architecture
 
-![Model Architecture](notebooks/images/model_architecture_dec.png)
+![Model Architecture](notebooks/images/approach_audio_diffusion.png)
 
 Across this github repo, there are numerous scripts to handle different parts of the audio processing pipeline, training, inference, and evaluation. We break down the main scripts with the main hyperparameters so that you can get started. To get a full list of the hyperparameters to choose from, you can view the individual scripts and their `args`. The scripts below will show default hyperparameters, but make sure they're matching for your use case.
 
