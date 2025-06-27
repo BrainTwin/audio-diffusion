@@ -177,6 +177,15 @@ def get_bigvgan_config(bigvgan_model_name):
         cfg["win_size"] = 1024
         cfg["fmin"] = 0
         cfg["fmax"] = 12000
+        
+    elif bigvgan_model_name == 'bigvgan_base_22khz_80band':
+        cfg["n_fft"] = 1024
+        cfg["num_mels"] = 80
+        cfg["sampling_rate"] = 22050
+        cfg["hop_size"] = 256
+        cfg["win_size"] = 1024
+        cfg["fmin"] = 0
+        cfg["fmax"] = 8000
  
  
     else:
