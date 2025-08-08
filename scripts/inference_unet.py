@@ -17,7 +17,7 @@ from torchvision.utils import save_image
 import torchvision.transforms as transforms
 
 import sys
-sys.path.insert(0, "/home/th716/audio-diffusion/submodules/diffusers/src/")
+#sys.path.insert(0, "/home/th716/audio-diffusion/submodules/diffusers/src/")
 
 import diffusers
 print('printing diffusers file first time')
@@ -139,9 +139,10 @@ def main(args):
                 )
 
             for i in range(batch_size):
+                time_stamp = time.time()
                 image_index = generated_count + i + 1
-                image_path = os.path.join(images_path, f'image_{image_index}.png')
-                audio_path = os.path.join(audios_path, f'audio_{image_index}.wav')
+                image_path = os.path.join(images_path, f'image_{image_index}_{str(time_stamp)}.png')
+                audio_path = os.path.join(audios_path, f'audio_{image_index}_{str(time_stamp)}.wav')
 
                 if args.mel_spec_method == "image":
                     images[i].save(image_path)
@@ -163,7 +164,7 @@ def main(args):
                     tensor_image = reverse_normalize(torch.tensor(img_tensor))
 
                     # Save the tensor to a file
-                    tensor_path = os.path.join(images_path, f"tensor_{image_index}.pt")
+                    tensor_path = os.path.join(images_path, f"tensor_{image_index}_{str(time_stamp)}.pt")
                     torch.save(tensor_image, tensor_path)
 
             generated_count += batch_size
