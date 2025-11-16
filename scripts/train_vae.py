@@ -25,8 +25,10 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader, Dataset
 
 # we want this script to first look into the local directory, rather than the installed audiodiffusion library
-sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/')
-sys.path.insert(0, '/home/th716/audio-diffusion/')
+#sys.path.insert(0, '/home/th716/rds/hpc-work/audio-diffusion/')
+#sys.path.insert(0, '/home/th716/audio-diffusion/')
+#sys.path.append('../audio-diffusion')
+sys.path.insert(0, '../audio-diffusion')
 print(f'new sys.path is: {sys.path}')
 from audiodiffusion.utils import convert_ldm_to_hf_vae
 

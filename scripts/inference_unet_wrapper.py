@@ -7,7 +7,7 @@ import time
 from pydub import AudioSegment
 import os
 
-PRETRAINED_MODEL_PATH = "../audio_diffusion_models/model_step_90000"#"/home/kidrm2/workspace/audio_diffusion/audio_diffusion_models/model_step_90000"
+PRETRAINED_MODEL_PATH = "../audio_diffusion_models/ddpm-model-2048x128_sr44k/model_step_10000"#"/home/kidrm2/workspace/audio_diffusion/audio_diffusion_models/model_step_90000"
 MEL_SPEC_METHOD = "image"
 NUM_IMAGES = "1"
 NUM_INFERENCE_STEPS = "100"
