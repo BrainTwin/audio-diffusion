@@ -133,8 +133,9 @@ def main(args):
             )
             
         # Determine image resolution
-        image = load_image_from_bytes(dataset[0]["image"]["bytes"])
-        resolution = image.height, image.width
+        #image = load_image_from_bytes(dataset[0]["image"]["bytes"])
+        #resolution = image.height, image.width
+        resolution = dataset[0]["image"].height, dataset[0]["image"].width
 
         augmentations = Compose([
             ToTensor(),
@@ -145,21 +146,27 @@ def main(args):
         
         def transforms(examples):
             try:
-                images = [augmentations(load_image_from_bytes(image["bytes"])) for image in examples["image"]]
+                #images = [augmentations(load_image_from_bytes(image["bytes"])) for image in examples["image"]]
+                images = [augmentations(image) for image in examples["image"]]
 
             except TypeError as e:
                 logger.error(f"Expected a dictionary with bytes, but got: {type(image)}. Error: {str(e)}")
                 raise
 
-            if 'encoding' in examples:
-                encoding = [torch.tensor(enc, dtype=torch.float32) for enc in examples['encoding']]
+            #if 'encoding' in examples:
+            #    encoding = [torch.tensor(enc, dtype=torch.float32) for enc in examples['encoding']]
+            if args.path_to_encodings_pickle is not None:
+                encoding = [encodings[file] for file in examples["audio_file"]]
                 return {"input": images, "encoding": encoding}
             
             return {"input": images}
 
         dataset.set_transform(transforms)
-        train_dataloader = torch.utils.data.DataLoader(
-            dataset, batch_size=args.train_batch_size, shuffle=True)
+        train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.train_batch_size, shuffle=True)
+    
+        if args.path_to_encodings_pickle is not None:
+            encodings = pickle.load(open(args.path_to_encodings_pickle, "rb"))
+
     # LOAD RAW WAVEFORMS
     else:
         train_dataset = AudioDataset(args.train_data_dir, chunk_length=args.waveform_resolution)
@@ -338,16 +345,16 @@ def main(args):
             if vqvae is not None and clean_images is not None:
                 vqvae.to(clean_images.device)
                 with torch.no_grad():
-                    clean_images = vqvae.encode(
-                        clean_images).latent_dist.sample()
+                    clean_images = vqvae.encode(clean_images).latent_dist.sample()
                 clean_images = clean_images * 0.18215
 
+            # Sample noise that we'll add to the images
             noise = torch.randn(clean_images.shape if clean_images is not None else clean_waveforms.shape).to(clean_images.device if clean_images is not None else clean_waveforms.device)
             bsz = clean_images.shape[0] if clean_images is not None else clean_waveforms.shape[0]
             timesteps = torch.randint(
                 0,
                 train_noise_scheduler.config.num_train_timesteps,
-                (bsz, ),
+                (bsz,),
                 device=noise.device,
             ).long()
 
@@ -356,12 +363,18 @@ def main(args):
 
             with accelerator.accumulate(model):
                 if use_encodings:
-                    encodings = batch["encoding"]
+                    # encodings = batch["encoding"]
+                    # # Move encodings to the correct device
+                    # encodings = encodings.to(noise.device)
+                    # if len(encodings.shape) == 2:
+                    #     encodings = encodings.unsqueeze(1)  # Add sequence_length dimension
+                    # noise_pred = model(noisy_images, timesteps, encodings)
+                    encs = batch["encoding"]
                     # Move encodings to the correct device
-                    encodings = encodings.to(noise.device)
-                    if len(encodings.shape) == 2:
-                        encodings = encodings.unsqueeze(1)  # Add sequence_length dimension
-                    noise_pred = model(noisy_images, timesteps, encodings)
+                    encs = encs.to(noise.device)
+                    if len(encs.shape) == 2:
+                        encs = encs.unsqueeze(1)  # Add sequence_length dimension
+                    noise_pred = model(noisy_images, timesteps, encs)
                 else:
                     noise_pred = model(noisy_images if noisy_images is not None else noisy_waveforms, timesteps)
                 loss = F.mse_loss(noise_pred["sample"], noise)
@@ -374,7 +387,6 @@ def main(args):
                 if args.use_ema:
                     ema_model.step(model)
                 optimizer.zero_grad()
-
 
             progress_bar.update(1)
             global_step += 1
